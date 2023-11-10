@@ -8,7 +8,7 @@
 #include "imgui.h"
 #include "imconfig-SFML.h"
 #include "imgui-SFML.h"
-
+#include "Graphh.h"
 
 class Game
 {
@@ -24,6 +24,8 @@ public:
         for (int i = 0; i < sampleMeanFPS; i++) {
             MeanFPS[i] = 0;
         }
+        // initialize the graph
+        graph = std::unique_ptr<Graph>(new Graph(wWindow, hWindow));
 
 	}
     virtual ~Game()
@@ -34,13 +36,13 @@ public:
     {
         sf::CircleShape shape(100.f);
         shape.setFillColor(sf::Color::Green);
-        window.draw(shape);
+        window.draw(graph->GetSprite());
     }
 
     void Update()
     {
         
-        
+        graph->Update();
         
     }
 
@@ -56,7 +58,13 @@ public:
                 window.close();
         }
         ImGui::Begin("Hello, world!");
-        ImGui::Button("Look at this pretty button");
+        
+        ImGui::SliderFloat("W11", graph->getW11(), -1.0f, 1.0f);
+        ImGui::SliderFloat("W12", graph->getW12(), -1.0f, 1.0f);
+        ImGui::SliderFloat("W21", graph->getW21(), -1.0f, 1.0f);
+        ImGui::SliderFloat("W22", graph->getW22(), -1.0f, 1.0f);
+        ImGui::SliderFloat("B1", graph->Bias1(), -400.0f, 400.0f);
+        ImGui::SliderFloat("B2", graph->Bias2(), -400.0f, 400.0f);
         ImGui::End();
        
         window.clear();
@@ -85,7 +93,7 @@ public:
            
 
            
-            
+            // calculates the mean fps
             float FPS = fps;
             if (lag > FPSMCS)
             {
@@ -108,16 +116,17 @@ public:
             
 
             
-            // this thing will update it onece per frame, and if lag is too big it will update everything a couple of times to catch up
+            // this thing will update it once per frame, and if lag is too big it will update everything a couple of times to catch up
             while (lag > FPSMCS) 
             {
 
                 Update();
+                RenderAndEvents(deltaClock);
                 lag -= FPSMCS;
                 
             }
-            // and only after that draw
-            RenderAndEvents(deltaClock);
+            
+           
             std::cout << frameRate << std::endl;
         
     
@@ -130,4 +139,5 @@ private:
     int* MeanFPS;
     int sampleMeanFPS;
     std::chrono::time_point<std::chrono::steady_clock> previous_time;
+    std::unique_ptr<Graph> graph;
 };
