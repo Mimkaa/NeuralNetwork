@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 class Layer
 {
@@ -99,6 +100,11 @@ public:
 		}
 	}
 
+	double ActivationFunction(double x)
+	{
+		return 1 / (1 + exp(-x));
+	}
+
 	double* CalculateOutput(double* input)
 	{
 	
@@ -110,7 +116,7 @@ public:
 				
 				weightedInput += input[j] * weights[j][i];
 			}
-			outputs[i] = weightedInput;
+			outputs[i] = ActivationFunction(weightedInput);
 		}
 		return outputs;
 	}
