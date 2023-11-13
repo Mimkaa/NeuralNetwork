@@ -8,7 +8,11 @@
 #include "imgui.h"
 #include "imconfig-SFML.h"
 #include "imgui-SFML.h"
+#include <SFML/Window/Mouse.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include "Graphh.h"
+#include <vector>
+#include "DataPoint.h"
 
 class Game
 {
@@ -34,9 +38,15 @@ public:
     }
     void draw()
     {
-        sf::CircleShape shape(100.f);
-        shape.setFillColor(sf::Color::Green);
+        
         window.draw(graph->GetSprite());
+        if (!dataPoints.empty())
+        {
+            for (auto& d : dataPoints)
+            {
+                d.Draw(window);
+            }
+        }
     }
 
     void Update()
@@ -56,6 +66,46 @@ public:
             ImGui::SFML::ProcessEvent(window, event);
             if (event.type == sf::Event::Closed)
                 window.close();
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+            {
+                sf::Vector2i position = sf::Mouse::getPosition(window);
+                dataPoints.push_back(DataPoint(position.x, position.y, true));
+            }
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+            {
+                sf::Vector2i position = sf::Mouse::getPosition(window);
+                dataPoints.push_back(DataPoint(position.x, position.y, false));
+            }
+            
+            // Check if a key was pressed
+            if (event.type == sf::Event::KeyPressed)
+            {
+                // Check which key was pressed
+                if (event.key.code == sf::Keyboard::D)
+                {
+                    dataPoints.clear();
+                }
+                // Check which key was pressed
+                if (event.key.code == sf::Keyboard::R)
+                {
+                    
+                    double dist = 999999999999;
+                    int indexToDelete = 0;
+                    sf::Vector2i position = sf::Mouse::getPosition(window);
+                    for (int i =0;i<dataPoints.size();i++)
+                    {
+                        double curDis = distance(position.x, dataPoints[i].x, position.y, dataPoints[i].y);
+                        if (curDis <dist)
+                        {
+                            dist = curDis;
+                            indexToDelete = i;
+                        }
+                    }
+                    dataPoints.erase(dataPoints.begin() + indexToDelete);
+                }
+                
+            }
+            
         }
        
         graph->ImGuiStuff();
@@ -66,6 +116,14 @@ public:
         window.display();
 
     }
+
+    double distance(double x1, double x2, double y1, double y2)
+    {
+        double x = x2 - x1;
+        double y = y2 - y1;
+        return sqrt(x * x + y * y);
+    }
+
 	void run(int fps)
 	{
         //Used to make the game framerate-independent.
@@ -120,7 +178,7 @@ public:
             }
             
            
-            std::cout << frameRate << std::endl;
+            //std::cout << frameRate << std::endl;
         
     
         }
@@ -133,4 +191,5 @@ private:
     int sampleMeanFPS;
     std::chrono::time_point<std::chrono::steady_clock> previous_time;
     std::unique_ptr<Graph> graph;
+    std::vector<DataPoint> dataPoints;
 };
