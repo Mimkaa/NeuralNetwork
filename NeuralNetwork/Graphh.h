@@ -2,13 +2,15 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include "Network.h"
 class Graph
 {
 public:
 	Graph(int width, int height)
 		:
 		width(width),
-		height(height)
+		height(height),
+		nn({2,3,2})
 	{
 		image = std::unique_ptr<sf::Image>(new sf::Image());
 		image->create(width, height, sf::Color::Black);
@@ -18,6 +20,8 @@ public:
 		texture->loadFromImage(*image);
 
 		sprite = std::unique_ptr<sf::Sprite>(new sf::Sprite(*texture));
+
+		
 
 	}
 
@@ -32,14 +36,13 @@ public:
 		{
 			for (int j = 0; j < height; j++)
 			{
-				/*float x = ((j / width) + 1) * width / 2;
-				float y = ((-i / height) + 1) * height / 2;
-				float res1 = j * weight1_1 + i * weight2_1 ;
-				float res2 = j * weight1_2 + i * weight2_2 ;
-				image->setPixel(y + bias1, x + bias2, res1 > res2 ? sf::Color::Cyan: sf::Color::Red);*/
-				float res1 = j * weight1_1 + i * weight2_1 + bias1;
-				float res2 = j * weight1_2 + i * weight2_2 + bias2;
-				image->setPixel(j, i, res1> res2 ?sf::Color::Cyan: sf::Color::Red);
+				
+				double* input = new double[2];
+				input[0] = j;
+				input[1] = i;
+				int res = nn.Classify(input);
+				image->setPixel(j, i, res>0.01?sf::Color::Cyan: sf::Color::Red);
+				delete[] input;
 
 			}
 		}
@@ -53,30 +56,9 @@ public:
 		sprite->setTexture(*texture);
 	}
 
-	float* getW11()
+	void ImGuiStuff()
 	{
-		return &weight1_1;
-	}
-	float* getW12()
-	{
-		return &weight1_2;
-	}
-	float* getW21()
-	{
-		return &weight2_1;
-	}
-	float* getW22()
-	{
-		return &weight2_2;
-	}
-
-	float* Bias1()
-	{
-		return &bias1;
-	}
-	float* Bias2()
-	{
-		return &bias2;
+		nn.ImguiStuff();
 	}
 
 
@@ -84,12 +66,7 @@ private:
 	std::unique_ptr<sf::Image> image;
 	std::unique_ptr<sf::Texture> texture;
 	std::unique_ptr<sf::Sprite> sprite;
-	float weight1_1 = 0.0f;
-	float weight1_2 = 0.0f;
-	float weight2_1 = 0.0f;
-	float weight2_2 = 0.0f;
-	float bias1 = 0.0f;
-	float bias2 = 0.0f;
+	Network nn;
 	int width;
 	int height;
 };

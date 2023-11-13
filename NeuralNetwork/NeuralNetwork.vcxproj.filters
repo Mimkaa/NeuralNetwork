@@ -71,5 +71,11 @@
     <ClInclude Include="Graphh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Network.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
