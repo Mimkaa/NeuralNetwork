@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <random>
 
 class Layer
 {
@@ -14,6 +15,8 @@ public:
 		weights = nullptr;
 		biases = nullptr;
 		outputs = nullptr;
+		weightsGrads = nullptr;
+		biasGrads = nullptr;
 	}
 	Layer(int numInp, int numOut)
 		:
@@ -22,9 +25,12 @@ public:
 	{
 		// initialize weights on the heap
 		weights = new double* [numInp];
-		for (int i = 0; i < numInp; ++i)
+		weightsGrads = new double* [numInp];
+		for (int i = 0; i < numInp; i++) 
+		{
 			weights[i] = new double[numOut];
-		
+			weightsGrads[i] = new double[numOut];
+		}
 			
 		for (int i = 0; i < numInp; i++)
 		{
@@ -32,6 +38,7 @@ public:
 			{
 				
 					weights[i][j] = 0;
+					weightsGrads[i][j] = 0;
 				
 			}
 		}
@@ -39,9 +46,10 @@ public:
 
 		// initialize biases
 		biases = new double[numOut];
+		biasGrads = new double[numOut];
 		for (int j = 0; j < numOut; j++)
 		{
-
+			biasGrads[j] = 0;
 			biases[j] = 0;
 
 		}
@@ -59,15 +67,47 @@ public:
 		
 	}
 
+	void randomInit()
+	{
+		
+		std::mt19937 gen(123);
+		std::uniform_real_distribution<double> dis(-1.0, 1.0);
+		std::uniform_real_distribution<double> disBias(-1.0, 1.0);
+		for (int i = 0; i < numInp; i++)
+		{
+			for (int j = 0; j < numOut; j++)
+			{
+				
+				double x = dis(gen);
+
+				weights[i][j] = x;
+				
+			
+
+			}
+		}
+	
+		for (int j = 0; j < numOut; j++)
+		{
+			double x = disBias(gen);
+			biases[j] = 0;
+
+		}
+	}
+
+
 	void initialize(int numInp, int numOut)
 	{
 		this->numInp = numInp;
 		this->numOut = numOut;
 		// initialize weights on the heap
 		weights = new double* [numInp];
-		for (int i = 0; i < numInp; ++i)
+		weightsGrads = new double* [numInp];
+		for (int i = 0; i < numInp; i++)
+		{
 			weights[i] = new double[numOut];
-
+			weightsGrads[i] = new double[numOut];
+		}
 
 		for (int i = 0; i < numInp; i++)
 		{
@@ -75,6 +115,7 @@ public:
 			{
 
 				weights[i][j] = 0;
+				weightsGrads[i][j] = 0;
 
 			}
 		}
@@ -82,9 +123,10 @@ public:
 
 		// initialize biases
 		biases = new double[numOut];
+		biasGrads = new double[numOut];
 		for (int j = 0; j < numOut; j++)
 		{
-
+			biasGrads[j] = 0;
 			biases[j] = 0;
 
 		}
@@ -98,6 +140,7 @@ public:
 			outputs[j] = 0;
 
 		}
+		randomInit();
 	}
 
 	double ActivationFunction(double x)
@@ -119,6 +162,31 @@ public:
 			outputs[i] = ActivationFunction(weightedInput);
 		}
 		return outputs;
+	}
+
+	void Adjust(double lernRate)
+	{
+		for (int i = 0; i < numOut; i++)
+		{
+			biases[i] -= biasGrads[i] * lernRate;
+			for (int j = 0; j < numInp; j++)
+			{
+
+				weights[j][i] -= weightsGrads[j][i] * lernRate;
+			}
+			
+		}
+	}
+
+	double NodeCost(double NodeValue, double ExpectedValue)
+	{
+		double diff = ExpectedValue - NodeValue;
+		return (diff * diff);
+	}
+
+	int GetNodes()
+	{
+		return numOut;
 	}
 
 	void ImguiStuff()
@@ -169,11 +237,27 @@ public:
 			weights = nullptr;
 		}
 
+		if (weightsGrads != nullptr)
+		{
+			std::cout << "Deleting weightGrads" << std::endl;
+			for (int i = 0; i < numInp; i++)
+				delete[] weightsGrads[i];
+			delete[] weightsGrads;
+			weightsGrads = nullptr;
+		}
+
 		if (biases != nullptr)
 		{
-			std::cout << "Deleting biases" << std::endl;
+			std::cout << "Deleting biasGrads" << std::endl;
 			delete[] biases;
 			biases = nullptr;
+		}
+
+		if (biasGrads != nullptr)
+		{
+			std::cout << "Deleting biases" << std::endl;
+			delete[] biasGrads;
+			biasGrads = nullptr;
 		}
 
 		if (outputs != nullptr)
@@ -189,7 +273,9 @@ public:
 
 public:
 	double** weights;
+	double** weightsGrads;
 	double* biases;
+	double* biasGrads;
 	double* outputs;
 	int numInp;
 	int numOut;

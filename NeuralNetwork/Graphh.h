@@ -29,6 +29,16 @@ public:
 		return *sprite;
 	}
 
+	double ShowCost(std::vector< DataPoint>& dataPoints)
+	{
+		return nn.Cost(dataPoints);
+	}
+	
+	void TrainNN(std::vector< DataPoint>& dataPoints, double lernRate)
+	{
+		nn.Train(dataPoints, lernRate);
+	}
+
 	void Visualize()
 	{
 		for (int i = 0; i < width; i++)

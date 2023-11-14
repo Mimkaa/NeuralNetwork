@@ -53,7 +53,16 @@ public:
     {
         
         graph->Update();
-        
+        if (!dataPoints.empty())
+        {
+            std::cout << graph->ShowCost(dataPoints) << std::endl;
+        }
+        if (lern)
+        {
+            graph->TrainNN(dataPoints, 0.001);
+
+        }
+       
     }
 
     void RenderAndEvents(sf::Clock& clc)
@@ -84,6 +93,11 @@ public:
                 if (event.key.code == sf::Keyboard::D)
                 {
                     dataPoints.clear();
+                }
+                // Check which key was pressed
+                if (event.key.code == sf::Keyboard::L)
+                {
+                    lern = !lern;
                 }
                 // Check which key was pressed
                 if (event.key.code == sf::Keyboard::R)
@@ -192,4 +206,5 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> previous_time;
     std::unique_ptr<Graph> graph;
     std::vector<DataPoint> dataPoints;
+    bool lern = false;
 };
