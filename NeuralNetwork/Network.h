@@ -100,9 +100,9 @@ public:
 			for (int j = 0; j < layer.numOut; j++)
 			{
 
-				layer.biasGrads[j] += h;
+				layer.biases[j] += h;
 				double costDiff = Cost(dataPoints) - originalCost;
-				layer.biasGrads[j] -= h;
+				layer.biases[j] -= h;
 				layer.biasGrads[j] = costDiff / h;
 
 			}

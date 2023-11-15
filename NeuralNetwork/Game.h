@@ -59,8 +59,8 @@ public:
         }
         if (lern)
         {
-            graph->TrainNN(dataPoints, 0.001);
-
+            graph->TrainNN(dataPoints, 0.1);
+            //std::cout << "LERN" << std::endl;
         }
        
     }
