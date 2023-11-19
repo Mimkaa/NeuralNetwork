@@ -55,11 +55,12 @@ public:
         graph->Update();
         if (!dataPoints.empty())
         {
-            std::cout << graph->ShowCost(dataPoints) << std::endl;
+            std::cout<<"Cost: " << graph->ShowCost(dataPoints) << std::endl;
+          
         }
         if (lern)
         {
-            graph->TrainNN(dataPoints, 0.1);
+            graph->TrainNN(dataPoints, 0.03);
             //std::cout << "LERN" << std::endl;
         }
        

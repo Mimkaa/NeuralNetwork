@@ -17,6 +17,8 @@ public:
 		outputs = nullptr;
 		weightsGrads = nullptr;
 		biasGrads = nullptr;
+		weightedInputs = nullptr;
+		input = nullptr;
 	}
 	Layer(int numInp, int numOut)
 		:
@@ -64,6 +66,19 @@ public:
 
 		}
 
+		// there we will store the weighted inputs  without the activation function
+		weightedInputs = new double[numOut];
+		for (int i = 0; i < numOut; i++)
+		{
+			weightedInputs[i] = 0;
+		}
+
+		input = new double[numInp];
+		for (int i = 0; i < numInp; i++)
+		{
+			input[i] = 0;
+		}
+
 		
 	}
 
@@ -72,7 +87,7 @@ public:
 		
 		std::mt19937 gen(123);
 		std::uniform_real_distribution<double> dis(-1.0, 1.0);
-		std::uniform_real_distribution<double> disBias(-40.0, 40.0);
+		std::uniform_real_distribution<double> disBias(-10.0, 10.0);
 		for (int i = 0; i < numInp; i++)
 		{
 			for (int j = 0; j < numOut; j++)
@@ -140,6 +155,20 @@ public:
 			outputs[j] = 0;
 
 		}
+
+		// there we will store the weighted inputs  without the activation function
+		weightedInputs = new double[numOut];
+		for (int i = 0; i < numOut; i++)
+		{
+			weightedInputs[i] = 0;
+		}
+
+		input = new double[numInp];
+		for (int i = 0; i < numInp; i++)
+		{
+			input[i] = 0;
+		}
+
 		randomInit();
 	}
 
@@ -148,9 +177,23 @@ public:
 		return 1 / (1 + exp(-x));
 	}
 
-	double* CalculateOutput(double* input)
+	double DerivativeActivationFunction(double x)
 	{
-	
+		double activation = ActivationFunction(x);
+		return activation * (1 - activation);
+	}
+
+	double* CalculateOutput(double* input_in)
+	{
+		
+
+		// copy the inputs
+		for (int i = 0; i < numInp; i++)
+		{
+			this->input[i] = input_in[i];
+		}
+
+
 		for (int i = 0; i < numOut; i++)
 		{
 			double weightedInput = biases[i];
@@ -158,10 +201,86 @@ public:
 			{
 				
 				weightedInput += input[j] * weights[j][i];
+				//std::cout << input[j]<<std::endl;
 			}
+			weightedInputs[i] = weightedInput;
 			outputs[i] = ActivationFunction(weightedInput);
+			
+			
 		}
+		
 		return outputs;
+	}
+
+	double* CalculateChainValues(double* expectedOutouts, int inputSize)
+	{
+		double* ChainValues = new double[inputSize] ();
+		for (int i = 0; i < inputSize; i++)
+		{
+			double costDeriv = NodeCostDerivative(expectedOutouts[i], outputs[i]);
+			
+			double activationDeriv = DerivativeActivationFunction(weightedInputs[i]);
+			//std::cout << activationDeriv << " " << costDeriv << std::endl;
+			ChainValues[i] += activationDeriv * costDeriv;
+		
+		}
+		
+		return ChainValues;
+	}
+
+	double* CalculateHiddenLayerChainValues(Layer& nextLayer, double* NextChainValues)
+	{
+		double* ChainValues = new double[numOut]();
+
+		for (int i = 0; i < numOut; i++)
+		{
+			double newChainVal = 0;
+			for (int j = 0; j < nextLayer.numOut; j++)
+			{
+				newChainVal += nextLayer.weights[i][j] * NextChainValues[j];
+				//std::cout << NextChainValues[j]<<" " << nextLayer.weights[i][j] <<" "<< nextLayer.weights[i][j] * NextChainValues[j] << std::endl;
+			}
+			
+			newChainVal *= DerivativeActivationFunction(weightedInputs[i]);
+			
+			ChainValues[i] = newChainVal;
+			
+			
+			
+		}
+
+		return ChainValues;
+	}
+
+	void UpdateGradient(double* chainValues)
+	{
+		for (int i = 0; i < numOut; i++)
+		{
+			for (int j = 0; j < numInp; j++)
+			{
+
+				double DerivativeWieghtedInputWrtWeight = input[j] * chainValues[i];
+
+				weightsGrads[j][i] += DerivativeWieghtedInputWrtWeight;
+
+			}
+			biasGrads[i] += 1 * chainValues[i];
+		}
+	}
+
+	void ClearGradients()
+	{
+		for (int i = 0; i < numInp; i++)
+		{
+			for (int j = 0; j < numOut; j++)
+			{
+				weightsGrads[i][j] = 0;
+			}
+		}
+		for (int i = 0; i < numOut; i++)
+		{
+			biasGrads[i] = 0;
+		}
 	}
 
 	void Adjust(double lernRate)
@@ -178,10 +297,19 @@ public:
 		}
 	}
 
+
+
 	double NodeCost(double NodeValue, double ExpectedValue)
 	{
 		double diff = ExpectedValue - NodeValue;
 		return (diff * diff);
+	}
+
+	double NodeCostDerivative(double NodeValue, double ExpectedValue)
+	{
+		
+		double diff = ExpectedValue - NodeValue;
+		return 2 * diff;
 	}
 
 	int GetNodes()
@@ -267,6 +395,19 @@ public:
 			outputs = nullptr;
 		}
 
+		if (weightedInputs != nullptr)
+		{
+			std::cout << "Deleting weightedInputs" << std::endl;
+			delete[] weightedInputs;
+			weightedInputs = nullptr;
+		}
+
+		if (input != nullptr)
+		{
+			std::cout << "Deleting Inputs" << std::endl;
+			delete[] input;
+			input = nullptr;
+		}
 		
 	}
 	
@@ -277,6 +418,8 @@ public:
 	double* biases;
 	double* biasGrads;
 	double* outputs;
+	double* weightedInputs;
+	double* input;
 	int numInp;
 	int numOut;
 	double minWeights = -1.0;

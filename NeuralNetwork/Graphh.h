@@ -36,7 +36,7 @@ public:
 	
 	void TrainNN(std::vector< DataPoint>& dataPoints, double lernRate)
 	{
-		nn.Train(dataPoints, lernRate);
+		nn.TrainEfficient(dataPoints, lernRate);
 	}
 
 	void Visualize()
@@ -46,12 +46,12 @@ public:
 			for (int j = 0; j < height; j++)
 			{
 				
-				double* input = new double[2];
+				double input[2] = {};
 				input[0] = j;
 				input[1] = i;
 				int res = nn.Classify(input);
 				image->setPixel(j, i, res>0.01?sf::Color::Cyan: sf::Color::Red);
-				delete[] input;
+			
 
 			}
 		}

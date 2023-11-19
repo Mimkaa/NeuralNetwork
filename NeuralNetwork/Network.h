@@ -11,12 +11,13 @@ public:
 	{
 		std::vector<int> Layout = values;
 		int size = Layout.size() - 1;
-	
+		// we create one less layer (no input)
 		for (int i = 0; i < size; i++)
 		{
 			NNlayers.push_back(Layer());
 		}
-
+		// we loop over the layers making the current num over input and the next our output and because we are taking the values from the layout
+		// the last layer will have the last value of the layout as nOutputs and the previous as inputs
 		for (int i = 0; i < NNlayers.size(); i++)
 		{
 			NNlayers[i].initialize(Layout[i], Layout[i+1]);
@@ -37,35 +38,70 @@ public:
 	double* CalculateOutput(double* input)
 	{
 		
+		
 		double* inputToPass = input;
+		int n = 0;
+		/*double output = 0;
+		Layer& firstLayer = NNlayers[0];*/
+
+
+		/*double lWeights[3];
+		lWeights[0] = firstLayer.weights[0][0];
+		lWeights[1] = firstLayer.weights[0][1];
+		lWeights[2] = firstLayer.weights[0][2];
+		double bias = firstLayer.biases[0];
+		output = lWeights[0] * input[0] + lWeights[1] * input[0] + lWeights[2] * input[0] + bias;
+		double outputActivated = firstLayer.ActivationFunction(output);*/
+		
+
+		/*double flo[3]; 
+		flo[0] = firstLayer.CalculateOutput(input)[0];
+		flo[1] = firstLayer.CalculateOutput(input)[1];
+		flo[2] = firstLayer.CalculateOutput(input)[2];
+
+		int a;*/
+
 		for (Layer& l : NNlayers)
 		{
+			
 			inputToPass = l.CalculateOutput(inputToPass);
+			
+			//std::cout << "Layer: " << n << "output0: " << inputToPass[0]  << std::endl;
+			n++;
 		}
+		
 		return inputToPass;
 	}
 
 	double Cost(DataPoint& dataPoint)
 	{
-		double* input = new double[2];
-		input[0] = (double)(dataPoint.x);
-		input[1] = (double)(dataPoint.y);
+		double input[2] = {};
+		//double* input = new double[2]();
+		input[0] += (double)(dataPoint.x);
+		input[1] += (double)(dataPoint.y);
 
-		double* expected = new double[2];
-		expected[1] = (double)(dataPoint.correct);
-		expected[0] = (double)(!dataPoint.correct);
+		double expected[2] = {};
+		expected[1] += (double)(dataPoint.correct);
+		expected[0] += (double)(!dataPoint.correct);
+		/*std::cout << "i1 " << input[1] << std::endl;
+		std::cout << "i0 " << input[0] << std::endl;*/
+
+		/*std::cout << "e1 " << expected[1] << std::endl;
+		std::cout << "e0 " << expected[0] << std::endl;*/
 
 		double* output = CalculateOutput(input);
+		/*std::cout << "o1 " << output[1] << std::endl;
+		std::cout << "o0 " << output[0] << std::endl;*/
+
 		Layer& lastLayer = NNlayers[NNlayers.size() - 1];
 		
 		double cost = 0;
 
-		for (int i = 0; i < lastLayer.GetNodes(); i++)
+		for (int i = 0; i < lastLayer.numOut; i++)
 		{
 			cost += lastLayer.NodeCost(output[i], expected[i]);
 		}
-		delete[] input;
-		delete[] expected;
+	
 		return cost;
 	}
 	
@@ -77,6 +113,50 @@ public:
 			sum += Cost(d);
 		}
 		return sum / dataPoints.size();
+	}
+
+	void UpdateAllGradients(DataPoint& dataPoint)
+	{
+		double input[2];
+		input[0] = (double)(dataPoint.x);
+		input[1] = (double)(dataPoint.y);
+
+		double expected[2] ;
+		expected[1] = (double)(dataPoint.correct);
+		expected[0] = (double)(!dataPoint.correct);
+
+		CalculateOutput(input);// to make and store all the mediatory values
+		Layer& Lastlayer = NNlayers[NNlayers.size() - 1];
+
+		double* chainValues = Lastlayer.CalculateChainValues(expected, 2);
+		Lastlayer.UpdateGradient(chainValues);
+
+		for (int i = NNlayers.size() - 2; i >= 0; i --)
+		{
+			
+			double* HiddenChainValues = NNlayers[i].CalculateHiddenLayerChainValues(NNlayers[i + 1], chainValues);
+			NNlayers[i].UpdateGradient(HiddenChainValues);
+			delete[] HiddenChainValues;
+		}
+
+		delete[] chainValues;
+	}
+
+	void TrainEfficient(std::vector< DataPoint>& dataPoints, double lernRate)
+	{
+		for (auto& p : dataPoints)
+		{
+			UpdateAllGradients(p);
+		}
+		for (auto& l : NNlayers)
+		{
+			l.Adjust(lernRate);
+		}
+		for (auto& l : NNlayers)
+		{
+			l.ClearGradients();
+		}
+
 	}
 
 	void Train(std::vector< DataPoint>& dataPoints, double lernRate)
