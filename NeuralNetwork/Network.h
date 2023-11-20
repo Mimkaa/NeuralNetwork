@@ -75,31 +75,17 @@ public:
 
 	double Cost(DataPoint& dataPoint)
 	{
-		double input[2] = {};
-		//double* input = new double[2]();
-		input[0] += (double)(dataPoint.x)/800;
-		input[1] += (double)(dataPoint.y)/800;
+		
 
-		double expected[2] = {};
-		expected[1] += (double)(dataPoint.correct);
-		expected[0] += (double)(!dataPoint.correct);
-		/*std::cout << "i1 " << input[1] << std::endl;
-		std::cout << "i0 " << input[0] << std::endl;*/
-
-		/*std::cout << "e1 " << expected[1] << std::endl;
-		std::cout << "e0 " << expected[0] << std::endl;*/
-
-		double* output = CalculateOutput(input);
-		/*std::cout << "o1 " << output[1] << std::endl;
-		std::cout << "o0 " << output[0] << std::endl;*/
-
+		double* output = CalculateOutput(dataPoint.GetInput());
+		
 		Layer& lastLayer = NNlayers[NNlayers.size() - 1];
 		
 		double cost = 0;
 
 		for (int i = 0; i < lastLayer.numOut; i++)
 		{
-			cost += lastLayer.NodeCost(output[i], expected[i]);
+			cost += lastLayer.NodeCost(output[i], dataPoint.GetExpected()[i]);
 		}
 	
 		return cost;
@@ -117,18 +103,12 @@ public:
 
 	void UpdateAllGradients(DataPoint& dataPoint)
 	{
-		double input[2];
-		input[0] = (double)(dataPoint.x)/800;
-		input[1] = (double)(dataPoint.y)/800;
+		
 
-		double expected[2] ;
-		expected[1] = (double)(dataPoint.correct);
-		expected[0] = (double)(!dataPoint.correct);
-
-		CalculateOutput(input);// to make and store all the mediatory values
+		CalculateOutput(dataPoint.GetInput());// to make and store all the mediatory values
 		Layer& Lastlayer = NNlayers[NNlayers.size() - 1];
 
-		double* chainValues = Lastlayer.CalculateChainValues(expected, 2);
+		double* chainValues = Lastlayer.CalculateChainValues(dataPoint.GetExpected(), 2);
 		Lastlayer.UpdateGradient(chainValues);
 
 		for (int i = NNlayers.size() - 2; i >= 0; i --)

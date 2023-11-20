@@ -21,6 +21,9 @@ public:
         :
         sampleMeanFPS(sampleMeanFPS)
 	{
+        this->width = wWindow;
+        this->height = hWindow;
+
 		window.create(sf::VideoMode(wWindow, hWindow), title);
         ImGui::SFML::Init(window);
         // initialize mean FPS array
@@ -79,12 +82,12 @@ public:
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
             {
                 sf::Vector2i position = sf::Mouse::getPosition(window);
-                dataPoints.push_back(DataPoint(position.x, position.y, true));
+                dataPoints.push_back(DataPoint(position.x, position.y, true, width, height));
             }
             if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
             {
                 sf::Vector2i position = sf::Mouse::getPosition(window);
-                dataPoints.push_back(DataPoint(position.x, position.y, false));
+                dataPoints.push_back(DataPoint(position.x, position.y, false, width, height));
             }
             
             // Check if a key was pressed
@@ -208,4 +211,6 @@ private:
     std::unique_ptr<Graph> graph;
     std::vector<DataPoint> dataPoints;
     bool lern = false;
+    int width;
+    int height;
 };
