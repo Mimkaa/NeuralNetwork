@@ -13,8 +13,8 @@ public:
 	{
 		input.push_back(0);
 		input.push_back(0);
-		input[0] = (double)(x) / width;
-		input[1] = (double)(y) / height;
+		input[0] = (double)(y) / height;
+		input[1] = (double)(x) / width;
 
 		extected.push_back(0);
 		extected.push_back(0);
