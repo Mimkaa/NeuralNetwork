@@ -37,9 +37,14 @@ public:
 				float res1 = j * weight1_1 + i * weight2_1 ;
 				float res2 = j * weight1_2 + i * weight2_2 ;
 				image->setPixel(y + bias1, x + bias2, res1 > res2 ? sf::Color::Cyan: sf::Color::Red);*/
-				float res1 = j * weight1_1 + i * weight2_1 + bias1;
-				float res2 = j * weight1_2 + i * weight2_2 + bias2;
-				image->setPixel(j, i, res1> res2 ?sf::Color::Cyan: sf::Color::Red);
+				double y = (j)/(double)height;
+				double x = (i) / (double)width;
+
+				
+				float res1 = y * weight1_1 + x * weight2_1 + bias1;
+				float res2 = y * weight1_2 + x * weight2_2 + bias2;
+				
+				image->setPixel(j, i, res1> res2 ? sf::Color::Cyan : sf::Color::Red);
 
 			}
 		}

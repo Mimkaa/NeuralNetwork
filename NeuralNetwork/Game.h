@@ -63,8 +63,8 @@ public:
         ImGui::SliderFloat("W12", graph->getW12(), -1.0f, 1.0f);
         ImGui::SliderFloat("W21", graph->getW21(), -1.0f, 1.0f);
         ImGui::SliderFloat("W22", graph->getW22(), -1.0f, 1.0f);
-        ImGui::SliderFloat("B1", graph->Bias1(), -400.0f, 400.0f);
-        ImGui::SliderFloat("B2", graph->Bias2(), -400.0f, 400.0f);
+        ImGui::SliderFloat("B1", graph->Bias1(), -1.0f, 1.0f);
+        ImGui::SliderFloat("B2", graph->Bias2(), -1.0f, 1.0f);
         ImGui::End();
        
         window.clear();
