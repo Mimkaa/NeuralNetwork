@@ -87,7 +87,7 @@ public:
 		
 		std::mt19937 gen(123);
 		std::uniform_real_distribution<double> dis(-1.0, 1.0);
-		std::uniform_real_distribution<double> disBias(-10.0, 10.0);
+		std::uniform_real_distribution<double> disBias(-1.0, 1.0);
 		for (int i = 0; i < numInp; i++)
 		{
 			for (int j = 0; j < numOut; j++)

@@ -9,7 +9,7 @@ public:
 		:
 		width(width),
 		height(height),
-		nn({2,3,2})
+		nn({2,4,2})
 	{
 		image = std::unique_ptr<sf::Image>(new sf::Image());
 		image->create(width, height, sf::Color::Black);
@@ -49,7 +49,12 @@ public:
 				double input[2] = {};
 				input[0] = j;
 				input[1] = i;
-				int res = nn.Classify(input);
+
+				double norm[2] = {};
+				norm[0] = (double)i / width;
+				norm[1] = (double)j / height;
+
+				int res = nn.Classify(norm);
 				image->setPixel(j, i, res>0.01?sf::Color::Cyan: sf::Color::Red);
 			
 

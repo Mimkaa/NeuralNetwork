@@ -77,8 +77,8 @@ public:
 	{
 		double input[2] = {};
 		//double* input = new double[2]();
-		input[0] += (double)(dataPoint.x);
-		input[1] += (double)(dataPoint.y);
+		input[0] += (double)(dataPoint.x)/800;
+		input[1] += (double)(dataPoint.y)/800;
 
 		double expected[2] = {};
 		expected[1] += (double)(dataPoint.correct);
@@ -118,8 +118,8 @@ public:
 	void UpdateAllGradients(DataPoint& dataPoint)
 	{
 		double input[2];
-		input[0] = (double)(dataPoint.x);
-		input[1] = (double)(dataPoint.y);
+		input[0] = (double)(dataPoint.x)/800;
+		input[1] = (double)(dataPoint.y)/800;
 
 		double expected[2] ;
 		expected[1] = (double)(dataPoint.correct);
