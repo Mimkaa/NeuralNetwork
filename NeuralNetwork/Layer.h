@@ -189,6 +189,6 @@ public:
 	int numOut;
 	double minWeights = -1.0;
 	double maxWeights = 1.0;
-	double minBias = -400.0;
-	double maxBias = 400.0;
+	double minBias = -1.0;
+	double maxBias = 1.0;
 };
