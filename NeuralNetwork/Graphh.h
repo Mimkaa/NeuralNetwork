@@ -9,7 +9,7 @@ public:
 		:
 		width(width),
 		height(height),
-		nn({2,4,2})
+		nn({2,3,4,3,2})
 	{
 		image = std::unique_ptr<sf::Image>(new sf::Image());
 		image->create(width, height, sf::Color::Black);

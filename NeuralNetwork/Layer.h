@@ -80,6 +80,7 @@ public:
 		}
 
 		
+		
 	}
 
 	void randomInit()
@@ -169,12 +170,15 @@ public:
 			input[i] = 0;
 		}
 
+		
+		activatedOutputs.resize(numOut, 0);
+
 		randomInit();
 	}
 
 	double ActivationFunction(double x)
 	{
-		return 1 / (1 + exp(-x));
+		return std::max(0.0, x);
 	}
 
 	double DerivativeActivationFunction(double x)
@@ -214,7 +218,7 @@ public:
 
 	double* CalculateChainValues(double* expectedOutouts, int inputSize)
 	{
-		double* ChainValues = new double[inputSize] ();
+		double* ChainValues = new double[inputSize]();
 		for (int i = 0; i < inputSize; i++)
 		{
 			double costDeriv = NodeCostDerivative(expectedOutouts[i], outputs[i]);
@@ -245,7 +249,7 @@ public:
 			
 			ChainValues[i] = newChainVal;
 			
-			
+			activatedOutputs[i] = newChainVal;
 			
 		}
 
@@ -268,6 +272,21 @@ public:
 		}
 	}
 
+	double** GetWeightGradients()
+	{
+		return weightsGrads;
+	}
+
+	std::vector<double> GetActivatedOutputs()
+	{
+		return activatedOutputs;
+	}
+
+	double** GetWeights()
+	{
+		return weights;
+	}
+
 	void ClearGradients()
 	{
 		for (int i = 0; i < numInp; i++)
@@ -280,6 +299,7 @@ public:
 		for (int i = 0; i < numOut; i++)
 		{
 			biasGrads[i] = 0;
+			activatedOutputs[i] = 0;
 		}
 	}
 
@@ -409,8 +429,18 @@ public:
 			input = nullptr;
 		}
 		
+		
 	}
 	
+	int GetNumInputs()
+	{
+		return numInp;
+	}
+
+	int GetNumOutputs()
+	{
+		return numOut;
+	}
 
 public:
 	double** weights;
@@ -420,6 +450,7 @@ public:
 	double* outputs;
 	double* weightedInputs;
 	double* input;
+	std::vector<double> activatedOutputs;
 	int numInp;
 	int numOut;
 	double minWeights = -1.0;

@@ -3,6 +3,7 @@
 #include <vector>
 #include "Layer.h"
 #include "DataPoint.h"
+#include "NumberCheckerStructure.h"
 
 class Network
 {
@@ -122,6 +123,62 @@ public:
 		delete[] chainValues;
 	}
 
+	void UpdateAllGradients(NumberCheckerStructure& dataPoint)
+	{
+
+
+		CalculateOutput(dataPoint.GetInput());// to make and store all the mediatory values
+		Layer& Lastlayer = NNlayers[NNlayers.size() - 1];
+
+		double* chainValues = Lastlayer.CalculateChainValues(dataPoint.GetExpected(), dataPoint.SizeExpected());
+		Lastlayer.UpdateGradient(chainValues);
+
+		for (int i = NNlayers.size() - 2; i >= 0; i--)
+		{
+
+			double* HiddenChainValues = NNlayers[i].CalculateHiddenLayerChainValues(NNlayers[i + 1], chainValues);
+			NNlayers[i].UpdateGradient(HiddenChainValues);
+			delete[] HiddenChainValues;
+		}
+
+		delete[] chainValues;
+	}
+
+	std::vector<std::vector<double>> transposeWeights(double** weights, int numInp, int numOut) {
+		// Create a new 2D vector with dimensions [numOut][numInp]
+		std::vector<std::vector<double>> transposed(numOut, std::vector<double>(numInp));
+
+		// Copy elements from the original matrix to the transposed matrix
+		for (int i = 0; i < numInp; ++i) {
+			for (int j = 0; j < numOut; ++j) {
+				transposed[j][i] = weights[i][j];
+			}
+		}
+
+		return transposed;
+	}
+
+	std::vector<double> returnGradientsInputLayer()
+	{
+		Layer& lastLayer = NNlayers[0];
+		auto gradients = lastLayer.GetActivatedOutputs();
+		
+		int numInp = lastLayer.GetNumInputs();
+		int numOut = lastLayer.GetNumOutputs();
+		auto weights = transposeWeights(lastLayer.GetWeights(), numInp, numOut);
+		std::vector<double> gradInp(numInp, 0);
+		for (int i = 0; i < numInp; i++)
+		{
+			double gradOut = 0;
+			for (int j = 0; j < numOut; j++)
+			{
+				gradOut += gradients[j] * weights[j][i];
+			}
+			gradInp[i] = gradOut;
+		}
+		return gradInp;
+	}
+
 	void TrainEfficient(std::vector< DataPoint>& dataPoints, double lernRate)
 	{
 		for (auto& p : dataPoints)
@@ -132,11 +189,31 @@ public:
 		{
 			l.Adjust(lernRate);
 		}
+		/*for (auto& l : NNlayers)
+		{
+			l.ClearGradients();
+		}*/
+
+	}
+
+	void TrainEfficient(std::vector<NumberCheckerStructure>& dataPoints, double lernRate)
+	{
+		for (auto& p : dataPoints)
+		{
+			UpdateAllGradients(p);
+		}
+		for (auto& l : NNlayers)
+		{
+			l.Adjust(lernRate);
+		}
+	}
+
+	void ClearGrads()
+	{
 		for (auto& l : NNlayers)
 		{
 			l.ClearGradients();
 		}
-
 	}
 
 	void Train(std::vector< DataPoint>& dataPoints, double lernRate)
