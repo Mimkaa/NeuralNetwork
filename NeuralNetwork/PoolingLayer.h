@@ -20,7 +20,7 @@ public:
 
 	int getOutputSize()
 	{
-		return sizeOut * sizeOut * numImgs;
+		return numImgs * sizeOut * sizeOut;
 	}
 
 	void pool(cv::Mat& imRef, int indexOut, std::unique_ptr<std::unique_ptr<std::pair<int, int>[]>[]>& coordBuffer )

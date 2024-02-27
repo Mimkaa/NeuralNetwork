@@ -178,7 +178,7 @@ public:
 
 	double ActivationFunction(double x)
 	{
-		return std::max(0.0, x);
+		return 1.0 / (1.0 + std::exp(-x));
 	}
 
 	double DerivativeActivationFunction(double x)

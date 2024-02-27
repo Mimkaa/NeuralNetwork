@@ -265,6 +265,20 @@ public:
 		return index;
 	}
 
+	std::vector<double> Classify(double* input, int outputSize)
+	{
+
+		double* output = CalculateOutput(input);
+		std::vector<double> vecOutput(outputSize, 0.0);
+		for (int i = 0; i < outputSize; i++)
+		{
+			vecOutput[i] = output[i];
+		}
+
+		return vecOutput;
+	}
+	
+
 private:
 	std::vector<Layer> NNlayers;
 	int lastLayerSize;

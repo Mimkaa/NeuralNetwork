@@ -60,18 +60,18 @@ public:
 
 	}
 
-	void TainEfficiently(std::vector<double> gradientsNormalNN)
+	void TainEfficiently(const std::vector<double> gradientsNormalNN, double lerningRate)
 	{
 		int numLayers = convLayers.size();
 		std::vector<double> InputGradinets = gradientsNormalNN;
-		for (int i = numLayers-1 - 1; i >= 0; --i) 
+		for (int i = numLayers-1 ; i >= 0; --i) 
 		{
 			auto imagesGrads = poolLayers[i].CollectGradientsInImages(InputGradinets);
 			auto resizedGradients = poolLayers[i].resizeGradients(imagesGrads);
 			convLayers[i].GradientOutput(resizedGradients);
 			convLayers[i].accumulateGradientsKernels();
 			InputGradinets = convLayers[i].FlattenedGradients(convLayers[i].GetGradientsInputs());
-			convLayers[i].AdjustWeightsBiases();
+			convLayers[i].AdjustWeightsBiases(lerningRate);
 			convLayers[i].ResetAccGradsKernels();
 			
 		}
@@ -81,7 +81,7 @@ public:
 
 	int getSizeOutput()
 	{
-		int size = poolLayers[poolLayers.size() - 1].getOutputSize();
+		int size = poolLayers[poolLayers.size()-1].getOutputSize();
 		return size;
 	}
 
@@ -96,7 +96,7 @@ public:
 			std::vector<cv::Mat*> convOut = convLayers[i].culculateOutput(images);
 			std::vector<cv::Mat*> poolOut = poolLayers[i].outputResult(convOut);
 			images = poolOut;
-			for (auto& im : convOut)
+			/*for (auto& im : convOut)
 			{
 				cv::namedWindow("Display window", cv::WINDOW_AUTOSIZE);
 
@@ -116,7 +116,7 @@ public:
 
 
 				cv::waitKey(0);
-			}
+			}*/
 		}
 		return  poolLayers[poolLayers.size() - 1].returnFlattened();
 	}

@@ -348,7 +348,7 @@ public:
 		return sums; // Return the vector of sums, one for each filter
 	}
 
-	void AdjustWeightsBiases()
+	void AdjustWeightsBiases(double lerningRate)
 	{
 		for (int filter = 0; filter < numFilters; filter++)
 		{
@@ -356,14 +356,14 @@ public:
 			{
 				for (int j = 0; j < filtSize; j++)
 				{
-					kernels[filter][i][j] += accGradsKernels[filter][i][j];
+					kernels[filter][i][j] += accGradsKernels[filter][i][j] * lerningRate;
 				}
 			}
 		}
 		auto collapsedActOut = sumActivationOutputsPerFilter(activationOutput);
 		for (int i = 0; i < numFilters; i++)
 		{
-			biases[i] += collapsedActOut[i];
+			biases[i] += collapsedActOut[i] * lerningRate;
 		}
 	}
 
