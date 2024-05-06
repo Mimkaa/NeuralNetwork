@@ -287,6 +287,16 @@ public:
 		return weights;
 	}
 
+	double* GetBiases()
+	{
+		return biases;
+	}
+
+	double* GetWeightedInputs()
+	{
+		return weightedInputs;
+	}
+
 	void ClearGradients()
 	{
 		for (int i = 0; i < numInp; i++)

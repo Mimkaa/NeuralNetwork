@@ -16,6 +16,15 @@
     <Filter Include="Header Files\imgui">
       <UniqueIdentifier>{1cbe7fcc-7a30-4316-82fd-95327a4137f8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\FullyConnected">
+      <UniqueIdentifier>{4629be55-b235-4cc1-a4fd-2272e32bcd16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ConvolutionalFirstTry">
+      <UniqueIdentifier>{76d37c71-7455-498a-bb66-c1fc1a716a81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ConvolutionBetter">
+      <UniqueIdentifier>{68cb48be-ca63-49e7-82fb-ad9b1caa8379}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -36,11 +45,14 @@
     <ClCompile Include="..\imgui\imgui-SFML.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FirstTry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PoolLayerVerTwoLast.h">
+      <Filter>Header Files\ConvolutionBetter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Game.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\imgui\imconfig-SFML.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
@@ -71,26 +83,50 @@
     <ClInclude Include="Graphh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Layer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Network.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DataPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ConvolutionaLayer.h">
+    <ClInclude Include="Shuffler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PoolingLayer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Network.h">
+      <Filter>Header Files\FullyConnected</Filter>
     </ClInclude>
-    <ClInclude Include="ConvolutionalPartFull.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Layer.h">
+      <Filter>Header Files\FullyConnected</Filter>
     </ClInclude>
     <ClInclude Include="NumberCheckerStructure.h">
+      <Filter>Header Files\FullyConnected</Filter>
+    </ClInclude>
+    <ClInclude Include="ConvolutionaLayer.h">
+      <Filter>Header Files\ConvolutionalFirstTry</Filter>
+    </ClInclude>
+    <ClInclude Include="ConvolutionalPartFull.h">
+      <Filter>Header Files\ConvolutionalFirstTry</Filter>
+    </ClInclude>
+    <ClInclude Include="PoolingLayer.h">
+      <Filter>Header Files\ConvolutionalFirstTry</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageLoader.h">
+      <Filter>Header Files\ConvolutionBetter</Filter>
+    </ClInclude>
+    <ClInclude Include="ConvLayerVerTwo.h">
+      <Filter>Header Files\ConvolutionBetter</Filter>
+    </ClInclude>
+    <ClInclude Include="PoolLayerVerTwo.h">
+      <Filter>Header Files\ConvolutionBetter</Filter>
+    </ClInclude>
+    <ClInclude Include="MatrixShower.h">
+      <Filter>Header Files\ConvolutionBetter</Filter>
+    </ClInclude>
+    <ClInclude Include="ConvPartVerTwo.h">
+      <Filter>Header Files\ConvolutionBetter</Filter>
+    </ClInclude>
+    <ClInclude Include="ConvPoolCombination.h">
+      <Filter>Header Files\ConvolutionBetter</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

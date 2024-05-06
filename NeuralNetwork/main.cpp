@@ -1,47 +1,66 @@
 #include <memory.h>
 #include <opencv2/opencv.hpp>
 #include "Game.h"
-#include "ConvolutionaLayer.h"
-#include "PoolingLayer.h"
 #include <vector>
-#include "ConvolutionalPartFull.h"
+#include <string>
+#include <Eigen/Dense>
+#include "ImageLoader.h"
+#include "PoolLayerVerTwo.h"
+#include "ConvLayerVerTwo.h"
+#include "MatrixShower.h"
+#include "ConvPartVerTwo.h"
 #include "Network.h"
-#include "NumberCheckerStructure.h"
+
 
 int main()
 {
-    std::vector<int> filters = { 4,3 };// number filters in each layer
-    ConvolutionalPartFull conv = ConvolutionalPartFull(2, 28, 3, 2, filters);
+    /*auto mm = il.getFirst();
+
+    MatrixShower ms = MatrixShower(3, 14);
+
     
-    int convSize = conv.getSizeOutput();
-    Network normalNN = Network({ conv.getSizeOutput(),10,5,10 });
-    conv.LoadImage("D://C++//NeuralNetwork//MNIST Dataset JPG format//MNIST Dataset JPG format//MNIST - JPG - training//0//1.jpg");
+    
+    ConvLayerVerTwo convL = ConvLayerVerTwo(1, 28, 3);
+    convL.NyamImage(il.getByIndexVec(0));
+    convL.convolve();
+
+    
+    PoolLayerVerTwo poolL = PoolLayerVerTwo(3, 28);
+    poolL.pool(convL.getOutputs());
+
+    ms.convertMatriciesToImages(poolL.getOutputs());
+    ms.showImages();*/
+
+    ImageLoader il = ImageLoader("D:/C++/NeuralNetwork/MNIST Dataset JPG format/MNIST Dataset JPG format/MNIST-Shuffled", "300");
+    
+
+    ConvPartVerTwo convPart = ConvPartVerTwo({ 4, 8 }, 28);
+    Network fullyConnectedPart = Network({ convPart.getSizeFlattendOutput(),64,32,10});
 
     for (int i = 0; i < 300; i++)
     {
-        std::vector<double> flat = conv.CalculateOutput();
+        auto datapoints = il.makeNumberCheckerByIndex(i, convPart);
+        fullyConnectedPart.TrainEfficient(datapoints, 0.01);
+        auto gradients = fullyConnectedPart.returnGradientsInputLayer();
+        
 
-        auto result = normalNN.Classify(flat.data(), 10);
-
-        std::vector<NumberCheckerStructure> dataPoints;
-        NumberCheckerStructure pp = NumberCheckerStructure(flat.data(), { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 });
-        dataPoints.push_back(pp);
-
-        normalNN.TrainEfficient(dataPoints, 0.01);
-
-        auto gradients = normalNN.returnGradientsInputLayer();
-
-        conv.TainEfficiently(gradients, 0.01);
-
-        normalNN.ClearGrads();
+        convPart.acceptGradients(gradients);
+        convPart.backwardPass(0.01);
+        fullyConnectedPart.ClearGrads();
     }
 
-    std::vector<double> flat = conv.CalculateOutput();
-    auto result = normalNN.Classify(flat.data(), 10);
     
-    std::unique_ptr<Game> game = std::make_unique<Game>(800, 800, "NN");
 
-    game->run(60);
+    convPart.forwardPass(il.getByIndexImage(175));
+    auto ress = fullyConnectedPart.Classify(convPart.getFlat().data(), 10);
+    auto maxIt = std::max_element(ress.begin(), ress.end());
+    int maxIndex = std::distance(ress.begin(), maxIt);
+    std::cout << maxIndex << std::endl;
 
+    auto correct = il.getByindexNumber(175);
+    auto maxIt1 = std::max_element(correct.begin(), correct.end());
+    int maxIndex1 = std::distance(correct.begin(), maxIt1);
+    std::cout << maxIndex1 << std::endl;
+    
     return 0;
 }

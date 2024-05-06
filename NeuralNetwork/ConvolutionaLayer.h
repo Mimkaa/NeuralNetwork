@@ -391,7 +391,7 @@ public:
 
 	std::vector<cv::Mat*> culculateOutput(std::vector<cv::Mat*> images)
 	{
-		
+		inputs.clear();
 		for (auto matPtr : images) {
 			if (matPtr != nullptr) {
 				// Dereference the pointer and copy the cv::Mat

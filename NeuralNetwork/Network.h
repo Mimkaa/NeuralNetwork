@@ -4,6 +4,8 @@
 #include "Layer.h"
 #include "DataPoint.h"
 #include "NumberCheckerStructure.h"
+#include <fstream>
+#include <iomanip>
 
 class Network
 {
@@ -102,6 +104,8 @@ public:
 		return sum / dataPoints.size();
 	}
 
+	// depricated does not work
+	//-------------------------------------------------
 	void UpdateAllGradients(DataPoint& dataPoint)
 	{
 		
@@ -122,25 +126,38 @@ public:
 
 		delete[] chainValues;
 	}
+	//-------------------------------------------------
 
 	void UpdateAllGradients(NumberCheckerStructure& dataPoint)
 	{
+		CalculateOutput(dataPoint.GetInput()); 
 
-
-		CalculateOutput(dataPoint.GetInput());// to make and store all the mediatory values
+		
 		Layer& Lastlayer = NNlayers[NNlayers.size() - 1];
-
 		double* chainValues = Lastlayer.CalculateChainValues(dataPoint.GetExpected(), dataPoint.SizeExpected());
 		Lastlayer.UpdateGradient(chainValues);
 
+		double* previousChainValues = chainValues; 
+
 		for (int i = NNlayers.size() - 2; i >= 0; i--)
 		{
+			
+			double* currentChainValues = NNlayers[i].CalculateHiddenLayerChainValues(NNlayers[i + 1], previousChainValues);
+			NNlayers[i].UpdateGradient(currentChainValues);
 
-			double* HiddenChainValues = NNlayers[i].CalculateHiddenLayerChainValues(NNlayers[i + 1], chainValues);
-			NNlayers[i].UpdateGradient(HiddenChainValues);
-			delete[] HiddenChainValues;
+			
+			if (previousChainValues != chainValues) {
+				delete[] previousChainValues;
+			}
+			previousChainValues = currentChainValues;
+
+			if (i == 0) { // Check if this is the last iteration
+				// Store the currentChainValues in the vector
+				derivesLastHiddenLayer.assign(currentChainValues, currentChainValues + NNlayers[i].GetNumOutputs());
+			}
 		}
 
+		
 		delete[] chainValues;
 	}
 
@@ -161,20 +178,20 @@ public:
 	std::vector<double> returnGradientsInputLayer()
 	{
 		Layer& lastLayer = NNlayers[0];
-		auto gradients = lastLayer.GetActivatedOutputs();
+		auto gradients = derivesLastHiddenLayer;
 		
 		int numInp = lastLayer.GetNumInputs();
 		int numOut = lastLayer.GetNumOutputs();
-		auto weights = transposeWeights(lastLayer.GetWeights(), numInp, numOut);
+		//auto weights = transposeWeights(lastLayer.GetWeights(), numInp, numOut);
 		std::vector<double> gradInp(numInp, 0);
 		for (int i = 0; i < numInp; i++)
 		{
 			double gradOut = 0;
 			for (int j = 0; j < numOut; j++)
 			{
-				gradOut += gradients[j] * weights[j][i];
+				gradOut += gradients[j] * lastLayer.GetWeights()[i][j];
 			}
-			gradInp[i] = gradOut;
+			gradInp[i] = gradOut * lastLayer.DerivativeActivationFunction(lastLayer.GetWeightedInputs()[i]);
 		}
 		return gradInp;
 	}
@@ -276,10 +293,37 @@ public:
 		}
 
 		return vecOutput;
+	} 
+
+	void storeState(const std::string& filename) {
+		std::ofstream file(filename, std::ios::app);
+		if (file.is_open()) {
+			file << std::fixed << std::setprecision(6);  // Set precision for floating-point numbers
+			for (auto& layer : NNlayers) {
+				file << "Layer details: " << layer.numInp << " inputs, " << layer.numOut << " outputs\n";
+				file << "kernels:\n";
+				for (int i = 0; i < layer.numInp; i++) {
+					for (int j = 0; j < layer.numOut; j++) {
+						file << layer.GetWeights()[i][j] << " ";
+					}
+					file << "\n";  // New line for each row of weights
+				}
+				file << "biases:\n";
+				for (int i = 0; i < layer.numOut; i++) {
+					file << layer.GetBiases()[i] << " ";
+				}
+				file << "\n\n";  // Double new line after each layer's details
+			}
+			file.close();
+		}
+		else {
+			std::cerr << "Unable to open file: " << filename << std::endl;
+		}
 	}
 	
 
 private:
 	std::vector<Layer> NNlayers;
 	int lastLayerSize;
+	std::vector<double> derivesLastHiddenLayer;
 };

@@ -49,6 +49,8 @@ public:
 
 	void LoadImage(const std::string& filename)
 	{
+		imageIn = cv::Mat();
+
 		cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
 		cv::Mat resizedImage;
 		int newWidth = imgSize;
@@ -57,6 +59,7 @@ public:
 		cv::resize(image, resizedImage, newSize, 0, 0, cv::INTER_LINEAR);
 		// convert to the proper format
 		resizedImage.convertTo(imageIn, CV_32F, 1.0 / 255.0);
+		
 
 	}
 
@@ -88,6 +91,9 @@ public:
 	std::vector<double> CalculateOutput()
 	{
 		
+		
+		
+
 
 		std::vector<cv::Mat*> images;
 		images.push_back(&imageIn);
