@@ -3,6 +3,7 @@
 #include <sstream>
 #include <cmath>
 #include <random>
+#include <Eigen/Dense>
 
 class Layer
 {
@@ -174,6 +175,25 @@ public:
 		activatedOutputs.resize(numOut, 0);
 
 		randomInit();
+	}
+
+	void SetWeights(Eigen::MatrixXd& mat)
+	{
+		for (int i = 0; i < numInp; i++)
+		{
+			for (int j = 0; j < numOut; j++)
+			{
+				weights[i][j] = mat(i, j);
+			}
+		}
+	}
+
+	void SetBiases(Eigen::VectorXd bbs)
+	{
+		for (int i = 0; i < numOut; i++)
+		{
+			biases[i] = bbs(i);
+		}
 	}
 
 	double ActivationFunction(double x)

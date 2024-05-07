@@ -320,7 +320,54 @@ public:
 			std::cerr << "Unable to open file: " << filename << std::endl;
 		}
 	}
+
+	void loadState(const std::string& filename)
+	{
+		loadStateBig(filename, NNlayers);
+	}
 	
+	void loadStateBig(const std::string& filename, std::vector<Layer>& NNlayers) {
+		std::ifstream file(filename);
+		if (!file.is_open()) {
+			std::cerr << "Unable to open file: " << filename << std::endl;
+			return;
+		}
+
+		std::string line;
+		int index = 0;
+		while (getline(file, line)) {
+			if (line.find("Layer details:") == 0) {
+				std::istringstream iss(line);
+				std::string token;
+				int numInputs, numOutputs;
+				iss >> token >> token >> numInputs >> token >> numOutputs >> token;
+				
+
+				getline(file, line);  // Move past 'kernels:'
+				Eigen::MatrixXd weights(numInputs, numOutputs);
+				for (int i = 0; i < numInputs; ++i) {
+					getline(file, line);
+					std::istringstream weightStream(line);
+					for (int j = 0; j < numOutputs; ++j) {
+						weightStream >> weights(i, j);
+					}
+				}
+				NNlayers[index].SetWeights(weights);
+
+				getline(file, line);  // Move past 'biases:'
+				getline(file, line);
+				std::istringstream biasStream(line);
+				Eigen::VectorXd biases(numOutputs);
+				for (int i = 0; i < numOutputs; ++i) {
+					biasStream >> biases(i);
+				}
+				NNlayers[index].SetBiases(biases);
+
+				index++;
+			}
+		}
+		file.close();
+	}
 
 private:
 	std::vector<Layer> NNlayers;

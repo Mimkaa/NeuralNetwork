@@ -31,13 +31,27 @@ int main()
     ms.convertMatriciesToImages(poolL.getOutputs());
     ms.showImages();*/
 
-    ImageLoader il = ImageLoader("D:/C++/NeuralNetwork/MNIST Dataset JPG format/MNIST Dataset JPG format/MNIST-Shuffled", "300");
+    ImageLoader il = ImageLoader("D:/C++/NeuralNetwork/MNIST Dataset JPG format/MNIST Dataset JPG format/MNIST-Shuffled", "6000");
     
 
     ConvPartVerTwo convPart = ConvPartVerTwo({ 4, 8 }, 28);
     Network fullyConnectedPart = Network({ convPart.getSizeFlattendOutput(),64,32,10});
 
-    for (int i = 0; i < 300; i++)
+    convPart.LoadState("ConvPart.txt");
+    fullyConnectedPart.loadState("FullyConnected.txt");
+
+    convPart.forwardPass(il.getByIndexImage(47));
+    auto ress = fullyConnectedPart.Classify(convPart.getFlat().data(), 10);
+    auto maxIt = std::max_element(ress.begin(), ress.end());
+    int maxIndex = std::distance(ress.begin(), maxIt);
+    std::cout << maxIndex << std::endl;
+
+    auto correct = il.getByindexNumber(47);
+    auto maxIt1 = std::max_element(correct.begin(), correct.end());
+    int maxIndex1 = std::distance(correct.begin(), maxIt1);
+    std::cout << maxIndex1 << std::endl;
+
+    /*for (int i = 0; i < 6000; i++)
     {
         auto datapoints = il.makeNumberCheckerByIndex(i, convPart);
         fullyConnectedPart.TrainEfficient(datapoints, 0.01);
@@ -51,16 +65,19 @@ int main()
 
     
 
-    convPart.forwardPass(il.getByIndexImage(175));
+    convPart.forwardPass(il.getByIndexImage(133));
     auto ress = fullyConnectedPart.Classify(convPart.getFlat().data(), 10);
     auto maxIt = std::max_element(ress.begin(), ress.end());
     int maxIndex = std::distance(ress.begin(), maxIt);
     std::cout << maxIndex << std::endl;
 
-    auto correct = il.getByindexNumber(175);
+    auto correct = il.getByindexNumber(133);
     auto maxIt1 = std::max_element(correct.begin(), correct.end());
     int maxIndex1 = std::distance(correct.begin(), maxIt1);
     std::cout << maxIndex1 << std::endl;
+
+    convPart.storeState("ConvPart.txt");
+    fullyConnectedPart.storeState("FullyConnected.txt");*/
     
     return 0;
 }

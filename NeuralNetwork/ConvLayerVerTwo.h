@@ -262,6 +262,14 @@ public:
 
     }
 
+    void SetKernelsBiases(const std::vector<Eigen::MatrixXd>& kernelss, const Eigen::VectorXd& biasess)
+    {
+        for (int i = 0; i < kernels.size(); i++)
+        {
+            kernels[i] = kernelss[i];
+        }
+        biases = biasess;
+    }
 	
 private:
 	std::vector<Eigen::MatrixXd> kernels;
