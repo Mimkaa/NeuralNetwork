@@ -51,9 +51,8 @@ public:
 		}
 		auto conv = convPools[convPools.size() - 1].getConv();
 		conv.acceptReditectedGradients(lastPool->getRedirectedGradients());
-		conv.makeGradientsWrtInput();
 		conv.updateWeightsAndBiases(learningRate);
-
+		conv.makeGradientsWrtInput();
 		const std::vector<Eigen::MatrixXd>* temp = &conv.getGradients();
 		for (int i = convPools.size() - 2; i >= 0; --i) {
 			temp = &convPools[i].processBackward(*temp,learningRate);
@@ -66,9 +65,11 @@ public:
 	{
 		PoolLayerVerTwo* pool = convPools[convPools.size() - 1].getPoolPtr();
 		auto lastPool = dynamic_cast<PoolLayerVerTwoLast*>(pool);
+		//auto pp = lastPool->getOutputs();
+		//std::cout << "Matrix mat:\n" << pp[2] << std::endl;
 		if (lastPool) 
 		{
-			lastPool->getFlattedMatrixVector();
+			return lastPool->getFlattedMatrixVector();
 		}
 		else {
 			// The cast failed

@@ -94,6 +94,32 @@ public:
         return numberCheck;
     }
 
+    std::vector<NumberCheckerStructure> makeNumberCheckerByIndexFC(int index)
+    {
+        auto& numberPath = textPaths[index];
+        auto& imagePath = imagePaths[index];
+
+        auto mat = getMatrixFromImage(imagePath);
+
+        std::ifstream file(numberPath); // Open the file
+        int number;
+        std::vector<double> numberCheck(10, 0);
+        if (file.is_open()) {
+            std::string firstLine;
+            std::getline(file, firstLine); // Read the first line
+            file.close(); // Close the file
+            number = std::stoi(firstLine);
+
+            numberCheck[number] = 1.0;
+
+        }
+        std::vector<NumberCheckerStructure> dataPoints;
+        NumberCheckerStructure pp = NumberCheckerStructure(mat.data(), numberCheck);
+        dataPoints.push_back(pp);
+
+
+        return dataPoints;
+    }
 
     std::vector<NumberCheckerStructure> makeNumberCheckerByIndex(int index, ConvPartVerTwo& convPart)
     {
@@ -186,7 +212,6 @@ public:
 
     Eigen::MatrixXd convertToEigen(const cv::Mat& image) 
     {
-        auto y = image;
         Eigen::MatrixXd eigenImage(image.rows, image.cols);
 
         //Eigen::MatrixXd result = eigenImage.cast<double>();

@@ -269,7 +269,7 @@ public:
 			
 			ChainValues[i] = newChainVal;
 			
-			activatedOutputs[i] = newChainVal;
+			
 			
 		}
 

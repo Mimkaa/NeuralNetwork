@@ -69,7 +69,8 @@ public:
         }
     }
 
-    const std::vector<Eigen::MatrixXd>& getOutputs() const { return outputs; }
+    const std::vector<Eigen::MatrixXd>& getOutputs()
+    { return outputs; }
 
     void acceptGradientsMats(const std::vector<Eigen::MatrixXd>& grds)
     {
