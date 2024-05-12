@@ -84,25 +84,34 @@ public:
 		
 	}
 
+	void initWeights()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		double stddev = std::sqrt(2.0 / numInp);  // Standard deviation for He initialization
+		std::normal_distribution<> distr(0, stddev);
+		for (int i = 0; i < numInp; i++)
+		{
+			for (int j = 0; j < numOut; j++)
+			{
+
+				double x = distr(gen);
+
+				weights[i][j] = x;
+
+
+
+			}
+		}
+	}
+
 	void randomInit()
 	{
 		
 		std::mt19937 gen(123);
 		std::uniform_real_distribution<double> dis(-1.0, 1.0);
 		std::uniform_real_distribution<double> disBias(-1.0, 1.0);
-		for (int i = 0; i < numInp; i++)
-		{
-			for (int j = 0; j < numOut; j++)
-			{
-				
-				double x = dis(gen);
-
-				weights[i][j] = x;
-				
-			
-
-			}
-		}
+		initWeights();
 	
 		for (int j = 0; j < numOut; j++)
 		{
@@ -198,13 +207,15 @@ public:
 
 	double ActivationFunction(double x)
 	{
-		return 1.0 / (1.0 + std::exp(-x));
+		//return 1.0 / (1.0 + std::exp(-x));
+		return std::max(0.0, x);
 	}
 
 	double DerivativeActivationFunction(double x)
 	{
-		double activation = ActivationFunction(x);
-		return activation * (1 - activation);
+		//double activation = ActivationFunction(x);
+		//return activation * (1 - activation);
+		return x > 0 ? 1.0 : 0.0;
 	}
 
 	double* CalculateOutput(double* input_in)
@@ -239,13 +250,15 @@ public:
 	double* CalculateChainValues(double* expectedOutouts, int inputSize)
 	{
 		double* ChainValues = new double[inputSize]();
+		
 		for (int i = 0; i < inputSize; i++)
 		{
 			double costDeriv = NodeCostDerivative(expectedOutouts[i], outputs[i]);
-			
+		
 			double activationDeriv = DerivativeActivationFunction(weightedInputs[i]);
 			//std::cout << activationDeriv << " " << costDeriv << std::endl;
 			ChainValues[i] += activationDeriv * costDeriv;
+			
 		
 		}
 		
@@ -264,7 +277,7 @@ public:
 				newChainVal += nextLayer.weights[i][j] * NextChainValues[j];
 				//std::cout << NextChainValues[j]<<" " << nextLayer.weights[i][j] <<" "<< nextLayer.weights[i][j] * NextChainValues[j] << std::endl;
 			}
-			
+			auto pp = DerivativeActivationFunction(weightedInputs[i]);
 			newChainVal *= DerivativeActivationFunction(weightedInputs[i]);
 			
 			ChainValues[i] = newChainVal;
@@ -357,7 +370,6 @@ public:
 
 	double NodeCostDerivative(double NodeValue, double ExpectedValue)
 	{
-		
 		double diff = ExpectedValue - NodeValue;
 		return 2 * diff;
 	}

@@ -17,7 +17,7 @@ public:
 		int index = 0;
 		for (auto& m : inputs)
 		{
-			Eigen::MatrixXd matrix = m;
+			Eigen::MatrixXd matrix = m.transpose();
 			//matrix *= 255;
 			// Convert the scaled Eigen matrix to OpenCV Mat
 			cv::Mat cvMatrix(matrix.rows(), matrix.cols(), CV_64F, matrix.data());

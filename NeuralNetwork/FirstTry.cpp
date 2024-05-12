@@ -78,7 +78,7 @@ void TrainDataSet(ConvolutionalPartFull& conv, Network& normalNN)
                     auto result = normalNN.Classify(flat.data(), 10);
 
                     std::vector<NumberCheckerStructure> dataPoints;
-                    NumberCheckerStructure pp = NumberCheckerStructure(flat.data(), numberCheck);
+                    NumberCheckerStructure pp = NumberCheckerStructure(flat, numberCheck);
                     dataPoints.push_back(pp);
 
                     normalNN.TrainEfficient(dataPoints, 0.01);
@@ -121,7 +121,7 @@ void TrainSingleNum(int numIters, ConvolutionalPartFull& conv, Network& normalNN
         auto result = normalNN.Classify(flat.data(), 10);
 
         std::vector<NumberCheckerStructure> dataPoints;
-        NumberCheckerStructure pp = NumberCheckerStructure(flat.data(), { 0,0,0,0,0,0,0,0,0,1 });
+        NumberCheckerStructure pp = NumberCheckerStructure(flat, { 0,0,0,0,0,0,0,0,0,1 });
         dataPoints.push_back(pp);
 
         normalNN.TrainEfficient(dataPoints, 0.01);

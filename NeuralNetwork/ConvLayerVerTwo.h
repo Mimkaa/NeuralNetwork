@@ -278,4 +278,4 @@ private:
     std::vector<Eigen::MatrixXd> gradientsOut;
     std::vector<Eigen::MatrixXd> gradientsScaledOut;
     Eigen::VectorXd biases;
-};
+}; 

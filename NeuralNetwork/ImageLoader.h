@@ -8,6 +8,7 @@
 #include <opencv2/core/eigen.hpp> 
 #include "NumberCheckerStructure.h"
 #include "ConvPartVerTwo.h"
+#include "MatrixShower.h"
 
 class ImageLoader
 {
@@ -68,7 +69,7 @@ public:
         }
     }
 
-    const std::vector<Eigen::MatrixXd> getByIndexImage(int index)
+    std::vector<Eigen::MatrixXd> getByIndexImage(int index)
     {
         auto& imagePath = imagePaths[index];
 
@@ -101,6 +102,10 @@ public:
 
         auto mat = getMatrixFromImage(imagePath);
 
+        //MatrixShower ms = MatrixShower(1, mat.rows());
+        //ms.convertMatriciesToImages({ mat });
+       // ms.showImages();
+
         std::ifstream file(numberPath); // Open the file
         int number;
         std::vector<double> numberCheck(10, 0);
@@ -114,7 +119,11 @@ public:
 
         }
         std::vector<NumberCheckerStructure> dataPoints;
-        NumberCheckerStructure pp = NumberCheckerStructure(mat.data(), numberCheck);
+        std::vector<double> vals;
+
+        vals.assign(mat.data(), mat.data() + mat.rows() * mat.cols());
+
+        NumberCheckerStructure pp = NumberCheckerStructure(vals, numberCheck);
         dataPoints.push_back(pp);
 
 
@@ -144,7 +153,8 @@ public:
         convPart.forwardPass(matricies);
 
         std::vector<NumberCheckerStructure> dataPoints;
-        NumberCheckerStructure pp = NumberCheckerStructure(convPart.getFlat().data(), numberCheck);
+        auto ppf = convPart.getFlat();
+        NumberCheckerStructure pp = NumberCheckerStructure(convPart.getFlat(), numberCheck);
         dataPoints.push_back(pp);
 
 

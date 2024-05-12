@@ -63,15 +63,15 @@ public:
 		flo[2] = firstLayer.CalculateOutput(input)[2];
 
 		int a;*/
-
 		for (Layer& l : NNlayers)
 		{
 			
 			inputToPass = l.CalculateOutput(inputToPass);
 			
 			//std::cout << "Layer: " << n << "output0: " << inputToPass[0]  << std::endl;
-			n++;
+			//n++;
 		}
+		
 		
 		return inputToPass;
 	}
@@ -128,27 +128,43 @@ public:
 	}
 	//-------------------------------------------------
 
+	void clipGradients(double* values, size_t size, double clipValue) {
+		for (size_t i = 0; i < size; i++) {
+			if (values[i] > clipValue) {
+				values[i] = clipValue;
+			}
+			else if (values[i] < -clipValue) {
+				values[i] = -clipValue;
+			}
+		}
+	}
+
 	void UpdateAllGradients(NumberCheckerStructure& dataPoint)
 	{
-		CalculateOutput(dataPoint.GetInput()); 
+		CalculateOutput(dataPoint.GetInput());
 
-		
 		Layer& Lastlayer = NNlayers[NNlayers.size() - 1];
 		double* chainValues = Lastlayer.CalculateChainValues(dataPoint.GetExpected(), dataPoint.SizeExpected());
+
+		// Apply gradient clipping to chainValues
+		clipGradients(chainValues, Lastlayer.GetNumOutputs(), 0.5); // Example clip value is 5.0
+
 		Lastlayer.UpdateGradient(chainValues);
 
-		double* previousChainValues = chainValues; 
+		double* previousChainValues = chainValues;
 
 		for (int i = NNlayers.size() - 2; i >= 0; i--)
 		{
-			
 			double* currentChainValues = NNlayers[i].CalculateHiddenLayerChainValues(NNlayers[i + 1], previousChainValues);
+
+			// Clip currentChainValues before updating gradients
+			clipGradients(currentChainValues, NNlayers[i].GetNumOutputs(), 0.5); // Use the same clip value
+
 			NNlayers[i].UpdateGradient(currentChainValues);
 
 			
-			if (previousChainValues != chainValues) {
-				delete[] previousChainValues;
-			}
+			delete[] previousChainValues;
+			
 			previousChainValues = currentChainValues;
 
 			if (i == 0) { // Check if this is the last iteration
@@ -157,7 +173,6 @@ public:
 			}
 		}
 
-		
 		delete[] chainValues;
 	}
 
@@ -189,10 +204,12 @@ public:
 			double gradOut = 0;
 			for (int j = 0; j < numOut; j++)
 			{
-				gradOut += gradients[j] * lastLayer.GetWeights()[i][j];
+				
+				gradOut += lastLayer.weights[i][j] * gradients[j];
 			}
 			gradInp[i] = gradOut * lastLayer.DerivativeActivationFunction(lastLayer.GetWeightedInputs()[i]);
 		}
+		clipGradients(gradInp.data(), lastLayer.GetNumInputs(), 0.5);
 		return gradInp;
 	}
 

@@ -59,6 +59,21 @@ std::vector<int> guess(int imageIndex, Network& fullyConnectedPart, ConvPartVerT
     return { maxIndex, maxIndex1 };
 }
 
+std::vector<int> guessFullyConnected(int imageIndex, Network& fullyConnectedPart, ImageLoader& il)
+{
+   
+    auto ress = fullyConnectedPart.Classify((il.getByIndexImage(imageIndex)[0]).data(), 10);
+    auto maxIt = std::max_element(ress.begin(), ress.end());
+    int maxIndex = std::distance(ress.begin(), maxIt);
+
+
+    auto correct = il.getByindexNumber(imageIndex);
+    auto maxIt1 = std::max_element(correct.begin(), correct.end());
+    int maxIndex1 = std::distance(correct.begin(), maxIt1);
+
+    return { maxIndex, maxIndex1 };
+}
+
 void storeState(Network& fullyConnectedPart, ConvPartVerTwo& convPart)
 {
     convPart.storeState("ConvPart.txt");
@@ -76,16 +91,16 @@ int main()
 {
     
 
-    int numberImages = 300;
+    int numberImages = 10000;
     ImageLoader il = ImageLoader("D:/C++/NeuralNetwork/MNIST Dataset JPG format/MNIST Dataset JPG format/MNIST-Shuffled", std::to_string(numberImages));
 
-    ConvPartVerTwo convPart = ConvPartVerTwo({ 8, 16 }, 28);
-    Network fullyConnectedPart = Network({ convPart.getSizeFlattendOutput(),64,32,10});
+    //ConvPartVerTwo convPart = ConvPartVerTwo({ 4, 8 }, 28);
+    Network fullyConnectedPart = Network({ 784,64,32,10});
     //loadState(fullyConnectedPart, convPart);
-    train(numberImages, fullyConnectedPart, convPart, il);
+    trainFullyConnected(numberImages, fullyConnectedPart, il);
 
-    
-    auto ans = guess(167, fullyConnectedPart, convPart, il);
+    auto ans = guessFullyConnected(0, fullyConnectedPart, il);
+    //auto ans = guess(1, fullyConnectedPart, convPart, il);
 
     //storeState(fullyConnectedPart, convPart);
     

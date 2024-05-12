@@ -5,15 +5,17 @@
 class NumberCheckerStructure
 {
 public:
-	NumberCheckerStructure(double* inputs, const std::vector<double>& truthTbl)
+	NumberCheckerStructure(std::vector<double>& input, const std::vector<double>& truthTbl)
 		:truthTable(std::move(truthTbl))
 	{
-		input = inputs;
+		inputForCheck.resize(input.size());  // Ensure copy has enough space
+
+		std::copy(input.begin(), input.end(), inputForCheck.begin());
 	}
 
 	double* GetInput()
 	{
-		return input;
+		return inputForCheck.data();
 	}
 	
 	double* GetExpected()
@@ -29,4 +31,5 @@ public:
 private:
 	double* input;
 	std::vector<double> truthTable;
+	std::vector<double> inputForCheck;
 };
