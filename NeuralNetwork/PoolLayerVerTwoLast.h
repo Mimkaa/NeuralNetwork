@@ -42,6 +42,7 @@ public:
                 }
             }
             gradients[m] = mat;
+            
  
         }
     }

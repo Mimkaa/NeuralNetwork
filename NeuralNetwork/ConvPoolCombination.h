@@ -49,7 +49,14 @@ public:
 		convLayer->acceptReditectedGradients(poolLayer->getRedirectedGradients());
 		convLayer->updateWeightsAndBiases(learningRate);
 		convLayer->makeGradientsWrtInput();
+		
 		return convLayer->getGradients();
+	}
+
+	void printMains()
+	{
+		convLayer->printbiases();
+		convLayer->printKernels();
 	}
 
 	void saveMatricesToFile(const std::string& filename) {

@@ -68,8 +68,7 @@ public:
 			
 			inputToPass = l.CalculateOutput(inputToPass);
 			
-			//std::cout << "Layer: " << n << "output0: " << inputToPass[0]  << std::endl;
-			//n++;
+			
 		}
 		
 		
@@ -95,6 +94,34 @@ public:
 	}
 	
 	double Cost(std::vector< DataPoint>& dataPoints)
+	{
+		double sum = 0;
+		for (auto& d : dataPoints)
+		{
+			sum += Cost(d);
+		}
+		return sum / dataPoints.size();
+	}
+
+	double Cost(NumberCheckerStructure& dataPoint)
+	{
+
+
+		double* output = CalculateOutput(dataPoint.GetInput());
+
+		Layer& lastLayer = NNlayers[NNlayers.size() - 1];
+
+		double cost = 0;
+
+		for (int i = 0; i < lastLayer.numOut; i++)
+		{
+			cost += lastLayer.NodeCost(output[i], dataPoint.GetExpected()[i]);
+		}
+
+		return cost;
+	}
+
+	double Cost(std::vector<NumberCheckerStructure>& dataPoints)
 	{
 		double sum = 0;
 		for (auto& d : dataPoints)
@@ -139,15 +166,45 @@ public:
 		}
 	}
 
+	void normalizeByMaxValue(double* values, size_t size) {
+		if (size == 0) return;  // Handle empty array
+
+		// Find the maximum absolute value
+		double maxAbsVal = 0.0;
+		for (size_t i = 0; i < size; i++) {
+			if (std::abs(values[i]) > maxAbsVal) {
+				maxAbsVal = std::abs(values[i]);
+			}
+		}
+
+		// Normalize the array by the maximum absolute value
+		if (maxAbsVal != 0) {  // Prevent division by zero
+			for (size_t i = 0; i < size; i++) {
+				values[i] /= maxAbsVal;
+			}
+		}
+	}
+
 	void UpdateAllGradients(NumberCheckerStructure& dataPoint)
 	{
 		CalculateOutput(dataPoint.GetInput());
+		
+		std::vector<double> vec;
+		vec.assign(NNlayers[NNlayers.size() - 1].outputs, NNlayers[NNlayers.size() - 1].outputs + NNlayers[NNlayers.size() - 1].GetNumOutputs());
+		// Check if all elements are zero
+		bool allZero = std::all_of(vec.begin(), vec.end(), [](double val) { return val == 0.0; });
+
+		if (allZero) {
+			throw std::runtime_error("All output values are zero.");
+		}
+		
 
 		Layer& Lastlayer = NNlayers[NNlayers.size() - 1];
 		double* chainValues = Lastlayer.CalculateChainValues(dataPoint.GetExpected(), dataPoint.SizeExpected());
 
 		// Apply gradient clipping to chainValues
-		clipGradients(chainValues, Lastlayer.GetNumOutputs(), 0.5); // Example clip value is 5.0
+		//clipGradients(chainValues, Lastlayer.GetNumOutputs(), 0.5); // Example clip value is 5.0
+		normalizeByMaxValue(chainValues, Lastlayer.GetNumOutputs());
 
 		Lastlayer.UpdateGradient(chainValues);
 
@@ -158,13 +215,16 @@ public:
 			double* currentChainValues = NNlayers[i].CalculateHiddenLayerChainValues(NNlayers[i + 1], previousChainValues);
 
 			// Clip currentChainValues before updating gradients
-			clipGradients(currentChainValues, NNlayers[i].GetNumOutputs(), 0.5); // Use the same clip value
+			//clipGradients(currentChainValues, NNlayers[i].GetNumOutputs(),0.5); // Use the same clip value
+			normalizeByMaxValue(currentChainValues, NNlayers[i].GetNumOutputs());
 
 			NNlayers[i].UpdateGradient(currentChainValues);
 
 			
-			delete[] previousChainValues;
-			
+
+			if (previousChainValues != chainValues) {
+				delete[] previousChainValues;
+			}
 			previousChainValues = currentChainValues;
 
 			if (i == 0) { // Check if this is the last iteration
@@ -209,7 +269,8 @@ public:
 			}
 			gradInp[i] = gradOut * lastLayer.DerivativeActivationFunction(lastLayer.GetWeightedInputs()[i]);
 		}
-		clipGradients(gradInp.data(), lastLayer.GetNumInputs(), 0.5);
+		//clipGradients(gradInp.data(), lastLayer.GetNumInputs(), 0.5);
+		normalizeByMaxValue(gradInp.data(), lastLayer.GetNumInputs());
 		return gradInp;
 	}
 

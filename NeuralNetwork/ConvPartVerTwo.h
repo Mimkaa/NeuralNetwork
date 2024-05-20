@@ -38,6 +38,13 @@ public:
 		}
 	}
 
+	void print()
+	{
+		for (auto& comb : convPools) {
+			comb.printMains();
+		}
+	}
+
 	void backwardPass(double learningRate)
 	{
 		PoolLayerVerTwo* pool = convPools[convPools.size() - 1].getPoolPtr();

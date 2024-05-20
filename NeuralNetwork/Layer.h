@@ -208,14 +208,14 @@ public:
 	double ActivationFunction(double x)
 	{
 		//return 1.0 / (1.0 + std::exp(-x));
-		return std::max(0.0, x);
+		return (x > 0) ? x : 0.01 * x;
 	}
 
 	double DerivativeActivationFunction(double x)
 	{
 		//double activation = ActivationFunction(x);
 		//return activation * (1 - activation);
-		return x > 0 ? 1.0 : 0.0;
+		return x > 0 ? 1.0 : 0.01;
 	}
 
 	double* CalculateOutput(double* input_in)

@@ -72,11 +72,38 @@ public:
     const std::vector<Eigen::MatrixXd>& getOutputs()
     { return outputs; }
 
+    void clipMatrix(Eigen::MatrixXd& matrix, double clipValue) {
+        // Clipping each element in the matrix
+        for (int i = 0; i < matrix.rows(); ++i) {
+            for (int j = 0; j < matrix.cols(); ++j) {
+                if (matrix(i, j) > clipValue) {
+                    matrix(i, j) = clipValue;
+                }
+                else if (matrix(i, j) < -clipValue) {
+                    matrix(i, j) = -clipValue;
+                }
+            }
+        }
+    }
+
+    void normalizeMatrixByMaxValue(Eigen::MatrixXd& matrix) {
+        // Find the maximum absolute value in the matrix
+        double maxAbsVal = matrix.cwiseAbs().maxCoeff();
+
+        // Normalize each element in the matrix by the maximum absolute value
+        if (maxAbsVal != 0) {  // Prevent division by zero
+            matrix /= maxAbsVal;
+        }
+    }
+
     void acceptGradientsMats(const std::vector<Eigen::MatrixXd>& grds)
     {
         for (int i = 0; i < grds.size(); i++)
         {
             gradients[i] = grds[i];
+            //clipMatrix(gradients[i], 0.5);
+            normalizeMatrixByMaxValue(gradients[i]);
+            
         }
     }
 
@@ -113,7 +140,9 @@ public:
             }
             
             redirectedGradients[i] = routedGradient;
+            
         }
+        
     }
 
     const std::vector<Eigen::MatrixXd>& getRedirectedGradients() const { return redirectedGradients; }

@@ -128,5 +128,8 @@
     <ClInclude Include="ConvPoolCombination.h">
       <Filter>Header Files\ConvolutionBetter</Filter>
     </ClInclude>
+    <ClInclude Include="gnuplot-iostream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

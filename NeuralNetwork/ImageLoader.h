@@ -149,13 +149,23 @@ public:
             numberCheck[number] = 1.0;
 
         }
+        
         std::vector<Eigen::MatrixXd> matricies{mat};
         convPart.forwardPass(matricies);
-
+        
         std::vector<NumberCheckerStructure> dataPoints;
         auto ppf = convPart.getFlat();
+
+        bool allZero = std::all_of(ppf.begin(), ppf.end(), [](double val) { return val == 0.0; });
+
+        if (allZero) {
+            throw std::runtime_error("All output values are zero.");
+        }
+
         NumberCheckerStructure pp = NumberCheckerStructure(convPart.getFlat(), numberCheck);
         dataPoints.push_back(pp);
+
+
 
 
         return dataPoints;

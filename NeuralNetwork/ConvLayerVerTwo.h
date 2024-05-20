@@ -58,8 +58,20 @@ private:
         }
     }
 
+    void InsertSmalliesInBiggies(Eigen::MatrixXd& inserter, Eigen::MatrixXd& insertee)// this thing inserts inputs into the scaled inputs to convolve later successfully
+    {
+      
+            // Calculate the start indices for the smaller matrix to be centered
+            int startRow = (inserter.rows() - insertee.rows()) / 2;
+            int startCol = (inserter.cols() - insertee.cols()) / 2;
+
+            // Copy the smaller matrix into the center of the larger matrix
+            inserter.block(startRow, startCol, insertee.rows(), insertee.cols()) = insertee;
+        
+    }
+
     double relu(double value) {
-        return std::max(0.0, value);
+        return (value > 0) ? value : 0.01 * value;
     }
 
     // Function to apply ReLU to an entire Eigen matrix
@@ -75,7 +87,7 @@ private:
         Eigen::MatrixXd derivative(matrix.rows(), matrix.cols());
         for (int i = 0; i < matrix.rows(); ++i) {
             for (int j = 0; j < matrix.cols(); ++j) {
-                derivative(i, j) = matrix(i, j) > 0 ? 1.0 : 0.0;
+                derivative(i, j) = matrix(i, j) > 0 ? 1.0 : 0.01;
             }
         }
         return derivative;
@@ -94,25 +106,27 @@ private:
     }
 
     
-    Eigen::MatrixXd correlateBackwards(Eigen::MatrixXd& input, Eigen::MatrixXd& gradient, Eigen::MatrixXd& kernel)
-    {
-        int inputScaledRows = input.rows() - (kernel.rows() - 1);
-        int inputScaledCols = input.cols() - (kernel.cols() - 1);
+    Eigen::MatrixXd correlateBackwards(const Eigen::MatrixXd& input, const Eigen::MatrixXd& gradient, const Eigen::MatrixXd& kernel) {
+        int kernelRows = kernel.rows();
+        int kernelCols = kernel.cols();
+        int gradientRows = gradient.rows();
+        int gradientCols = gradient.cols();
 
-        Eigen::MatrixXd out(kernel.rows(), kernel.cols());
-        out.setZero();
-        // Perform convolution
-        for (int i = 0; i < inputScaledRows; ++i) {
-            for (int j = 0; j < inputScaledCols; ++j) {
-                // Extract the submatrix corresponding to the current sliding position
-                Eigen::MatrixXd subMatrixInput = input.block(i, j, kernel.rows(), kernel.cols());
-                Eigen::MatrixXd subMatrixGrad = gradient.block(i, j, kernel.rows(), kernel.cols());
-                // Compute the element-wise product and sum it up
+        // Compute the gradient with respect to the filter
+        Eigen::MatrixXd gradWRTKernel = Eigen::MatrixXd::Zero(kernelRows, kernelCols);
 
-                out += subMatrixInput.cwiseProduct(subMatrixGrad);
+        // Perform the correlation operation using blocks
+        for (int i = 0; i <= gradientRows - kernelRows; ++i) {
+            for (int j = 0; j <= gradientCols - kernelCols; ++j) {
+                // Extract the corresponding submatrix from the input
+                Eigen::MatrixXd inputBlock = input.block(i, j, kernelRows, kernelCols);
+
+                // Element-wise multiplication with the gradient block and summing the result
+                gradWRTKernel += inputBlock.cwiseProduct(gradient.block(i, j, kernelRows, kernelCols));
             }
         }
-        return out;
+
+        return gradWRTKernel;
     }
 
     
@@ -125,6 +139,8 @@ public:
         InitZeros(inputScaled, inputSize, inputDimention + 2);
         InitZeros(input, inputSize, inputDimention);
         InitZeros(weightedInput, numKernels, inputDimention);
+        InitZeros(normalizedInput, numKernels, inputDimention);
+        InitZeros(dnormalizedInputs, numKernels, inputDimention);
         InitZeros(outputs, numKernels, inputDimention);
         InitZeros(gradientsIn, numKernels, inputDimention);
         InitZeros(gradientsScaledIn, numKernels, inputDimention + 2);
@@ -135,21 +151,103 @@ public:
         biasesTemp.setZero();
         biases = biasesTemp;
 
+        Eigen::VectorXd betaTemp(numKernels);
+        betaTemp.setZero();
+        beta = betaTemp;
+
+        Eigen::VectorXd gammaTemp(numKernels);
+        gammaTemp.setOnes();
+        gamma = gammaTemp;
+
+        Eigen::VectorXd gammaGradsTemp(numKernels);
+        gammaGradsTemp.setZero();
+        gammaGrads = gammaGradsTemp;
+
+        Eigen::VectorXd betaGradsTemp(numKernels);
+        betaGradsTemp.setZero();
+        betaGrads = betaGradsTemp;
+
+        
+
 	}
 
-    const std::vector<Eigen::MatrixXd>& getOutputs() const { return outputs; }
+    void normalizeOutputsByMax(std::vector<Eigen::MatrixXd>& matrices) {
+        for (auto& matrix : matrices) {
+            if (matrix.size() > 0) {
+                // Find the maximum value in the matrix
+                double maxVal = matrix.maxCoeff();
+                // Normalize the matrix by the maximum value
+                if (maxVal != 0) {
+                    matrix /= maxVal;
+                }
+            }
+        }
+    }
+
+    const std::vector<Eigen::MatrixXd>& getOutputs() { normalizeOutputsByMax(outputs); return outputs; }
     const std::vector<Eigen::MatrixXd>& getGradients() const { return gradientsOut; }
     const std::vector<Eigen::MatrixXd>& getKernels() const { return kernels; }
     const Eigen::VectorXd& getBiases() { return biases; }
+
+    void clipMatrix(Eigen::MatrixXd& matrix, double clipValue) {
+        // Clipping each element in the matrix
+        for (int i = 0; i < matrix.rows(); ++i) {
+            for (int j = 0; j < matrix.cols(); ++j) {
+                if (matrix(i, j) > clipValue) {
+                    matrix(i, j) = clipValue;
+                }
+                else if (matrix(i, j) < -clipValue) {
+                    matrix(i, j) = -clipValue;
+                }
+            }
+        }
+    }
+
+    void normalizeMatrixByMaxValue(Eigen::MatrixXd& matrix) {
+        // Find the maximum absolute value in the matrix
+        double maxAbsVal = matrix.cwiseAbs().maxCoeff();
+
+        // Normalize each element in the matrix by the maximum absolute value
+        if (maxAbsVal != 0) {  // Prevent division by zero
+            matrix /= maxAbsVal;
+        }
+    }
 
     void acceptReditectedGradients(const std::vector<Eigen::MatrixXd>& grads)
     {
         for (int i = 0; i < grads.size(); i++)
         {
             gradientsIn[i] = grads[i];
+            normalizeMatrixByMaxValue(gradientsIn[i]);
         }
         InsertSmalliesInBiggies(gradientsScaledIn, gradientsIn);
+        
+
     }
+
+    void printMatricies(std::vector<Eigen::MatrixXd> mmms)
+    {
+        for (auto& mat : mmms)
+        {
+            std::cout << mat << std::endl;
+        }
+    }
+
+
+    void printKernels()
+    {
+        for (auto& mat : kernels)
+        {
+            std::cout << mat << std::endl;
+        }
+    }
+    void printbiases()
+    {
+        
+        std::cout << biases << std::endl;
+        
+    }
+
     // ------------------------------grads------------------------
 
     void convolve(std::vector<Eigen::MatrixXd>& kernels, std::vector<Eigen::MatrixXd>& scaledthing, std::vector<Eigen::MatrixXd>& output)
@@ -166,12 +264,12 @@ public:
                 Eigen::MatrixXd out(inputScaledRows, inputScaledCols);
 
                 // Perform convolution
-                for (int i = 1; i < inputScaledRows; ++i) {
-                    for (int j = 1; j < inputScaledCols; ++j) {
+                for (int i = 0; i < inputScaledRows; ++i) {
+                    for (int j = 0; j < inputScaledCols; ++j) {
                         // Extract the submatrix corresponding to the current sliding position
                         Eigen::MatrixXd subMatrix = scaledthing[mat].block(i, j, flippedKernel.rows(), flippedKernel.cols());
                         // Compute the element-wise product and sum it up
-                        out(i - 1, j - 1) = (subMatrix.array() * flippedKernel.array()).sum();
+                        out(i, j) = (subMatrix.array() * flippedKernel.array()).sum();
                     }
                 }
                 output[mat] += out;
@@ -183,6 +281,7 @@ public:
     }
     void makeGradientsWrtInput()
     {
+        
         convolve(kernels, gradientsScaledIn, gradientsOut);
         // Now, compute the activation function derivatives and apply them element-wise to the gradients
         for (size_t i = 0; i < gradientsOut.size(); ++i) {
@@ -197,23 +296,29 @@ public:
         std::vector<Eigen::MatrixXd> gradientsWRTWeights(kernels.size());
         Eigen::VectorXd gradientsWRTBiases = Eigen::VectorXd::Zero(biases.size());
 
-        
         for (size_t i = 0; i < kernels.size(); ++i) {
             gradientsWRTWeights[i] = Eigen::MatrixXd::Zero(kernels[i].rows(), kernels[i].cols());
 
-            for (size_t j = 0; j < input.size(); ++j) {
-                gradientsWRTWeights[i] += correlateBackwards(inputScaled[j], gradientsScaledIn[i], kernels[i]);
+            for (size_t j = 0; j < inputScaled.size(); ++j) {
+
+                gradientsWRTWeights[i] += correlateBackwards(input[j], gradientsIn[j], kernels[i]);
             }
-
             
+            //clipMatrix(gradientsWRTWeights[i], 0.5);
+            normalizeMatrixByMaxValue(gradientsWRTWeights[i]);
             gradientsWRTBiases(i) = gradientsIn[i].sum();
+            
         }
-
+       
         // Update weights and biases using computed gradients
         for (size_t i = 0; i < kernels.size(); ++i) {
             kernels[i] -= learningRate * gradientsWRTWeights[i]; // Update each filter
             biases(i) -= learningRate * gradientsWRTBiases(i);   // Update biases
         }
+
+        checkKernelsForNaNs(kernels, gradientsScaledIn);
+
+        
     }
 
     // ------------------------------grads------------------------
@@ -229,8 +334,21 @@ public:
 
     }
 
+    bool isAllNaN(const Eigen::MatrixXd& kernel) {
+        return kernel.array().isNaN().all();
+    }
+
+    // Function to loop over a vector of kernels and check for NaNs
+    void checkKernelsForNaNs(const std::vector<Eigen::MatrixXd>& kernels, const std::vector<Eigen::MatrixXd>& otherMatToCheck) {
+        for (size_t i = 0; i < kernels.size(); ++i) {
+            if (isAllNaN(kernels[i])) {
+                printMatricies(otherMatToCheck);
+                throw std::runtime_error("All values in kernel " + std::to_string(i) + " are NaN.");
+            }
+        }
+    }
+
     
-  
     void crossCorr() {
         for (int kernel = 0; kernel < kernels.size(); kernel++) {
             for (int mat = 0; mat < inputScaled.size(); mat++) {
@@ -240,18 +358,22 @@ public:
 
                 Eigen::MatrixXd out(outputRows, outputCols);
 
-                // Loop over the inputScaled matrix but skip the first and last padding rows and columns
-                for (int i = 1; i < outputRows; ++i) {
-                    for (int j = 1; j < outputCols; ++j) {
+                // Loop over the inputScaled matrix to apply convolution
+                for (int i = 0; i < outputRows; ++i) {
+                    for (int j = 0; j < outputCols; ++j) {
                         // Extract the submatrix at the correct offset
                         Eigen::MatrixXd subMatrix = inputScaled[mat].block(i, j, kernels[kernel].rows(), kernels[kernel].cols());
                         // Compute the element-wise product and sum it up
-                        out(i - 1, j - 1) = (subMatrix.array() * kernels[kernel].array()).sum();
+                        out(i, j) = (subMatrix.array() * kernels[kernel].array()).sum();
                     }
                 }
 
-                out.array() += biases[kernel];
+                // Add the bias and store the result
                 weightedInput[kernel] = out;
+                out.array() += biases[kernel];
+                
+
+                // Apply ReLU activation
                 applyReLU(out);
                 outputs[kernel] += out;
             }
@@ -277,5 +399,11 @@ private:
     std::vector<Eigen::MatrixXd> gradientsScaledIn;
     std::vector<Eigen::MatrixXd> gradientsOut;
     std::vector<Eigen::MatrixXd> gradientsScaledOut;
+    std::vector<Eigen::MatrixXd> normalizedInput;
+    std::vector<Eigen::MatrixXd> dnormalizedInputs;
+    Eigen::VectorXd gammaGrads;
+    Eigen::VectorXd betaGrads;
     Eigen::VectorXd biases;
+    Eigen::VectorXd gamma; // Scale factor for batch normalization
+    Eigen::VectorXd beta;  // Shift factor for batch normalization
 }; 
