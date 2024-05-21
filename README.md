@@ -12,4 +12,4 @@
 
 ![image info](./pictures/image1.png)
 ![image info](./pictures/image2.png)
-![image info](./pictures/image3.png)
+
