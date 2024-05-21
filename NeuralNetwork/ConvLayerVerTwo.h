@@ -134,6 +134,9 @@ private:
 
 public:
 	ConvLayerVerTwo(int inputSize, int inputDimention, int numKernels, int kernelSize = 3)
+        :
+        numKernels(numKernels),
+        inputDimention(inputDimention)
 	{
         initKernels(numKernels, kernelSize, inputSize);
         InitZeros(inputScaled, inputSize, inputDimention + 2);
@@ -184,41 +187,41 @@ public:
         }
     }
 
-    const std::vector<Eigen::MatrixXd>& getOutputs() { normalizeOutputsByMax(outputs); return outputs; }
+    const std::vector<Eigen::MatrixXd>& getOutputs() { return outputs; }
     const std::vector<Eigen::MatrixXd>& getGradients() const { return gradientsOut; }
     const std::vector<Eigen::MatrixXd>& getKernels() const { return kernels; }
     const Eigen::VectorXd& getBiases() { return biases; }
 
-    void clipMatrix(Eigen::MatrixXd& matrix, double clipValue) {
-        // Clipping each element in the matrix
-        for (int i = 0; i < matrix.rows(); ++i) {
-            for (int j = 0; j < matrix.cols(); ++j) {
-                if (matrix(i, j) > clipValue) {
-                    matrix(i, j) = clipValue;
-                }
-                else if (matrix(i, j) < -clipValue) {
-                    matrix(i, j) = -clipValue;
-                }
-            }
-        }
-    }
+    //void clipMatrix(Eigen::MatrixXd& matrix, double clipValue) {
+    //    // Clipping each element in the matrix
+    //    for (int i = 0; i < matrix.rows(); ++i) {
+    //        for (int j = 0; j < matrix.cols(); ++j) {
+    //            if (matrix(i, j) > clipValue) {
+    //                matrix(i, j) = clipValue;
+    //            }
+    //            else if (matrix(i, j) < -clipValue) {
+    //                matrix(i, j) = -clipValue;
+    //            }
+    //        }
+    //    }
+    //}
 
-    void normalizeMatrixByMaxValue(Eigen::MatrixXd& matrix) {
-        // Find the maximum absolute value in the matrix
-        double maxAbsVal = matrix.cwiseAbs().maxCoeff();
+    //void normalizeMatrixByMaxValue(Eigen::MatrixXd& matrix) {
+    //    // Find the maximum absolute value in the matrix
+    //    double maxAbsVal = matrix.cwiseAbs().maxCoeff();
 
-        // Normalize each element in the matrix by the maximum absolute value
-        if (maxAbsVal != 0) {  // Prevent division by zero
-            matrix /= maxAbsVal;
-        }
-    }
+    //    // Normalize each element in the matrix by the maximum absolute value
+    //    if (maxAbsVal != 0) {  // Prevent division by zero
+    //        matrix /= maxAbsVal;
+    //    }
+    //}
 
     void acceptReditectedGradients(const std::vector<Eigen::MatrixXd>& grads)
     {
         for (int i = 0; i < grads.size(); i++)
         {
             gradientsIn[i] = grads[i];
-            normalizeMatrixByMaxValue(gradientsIn[i]);
+            //normalizeMatrixByMaxValue(gradientsIn[i]);
         }
         InsertSmalliesInBiggies(gradientsScaledIn, gradientsIn);
         
@@ -305,7 +308,8 @@ public:
             }
             
             //clipMatrix(gradientsWRTWeights[i], 0.5);
-            normalizeMatrixByMaxValue(gradientsWRTWeights[i]);
+            //normalizeMatrixByMaxValue(gradientsWRTWeights[i]);
+            //clipMatrix(gradientsWRTWeights[i], 5.0);
             gradientsWRTBiases(i) = gradientsIn[i].sum();
             
         }
@@ -350,6 +354,7 @@ public:
 
     
     void crossCorr() {
+        InitZeros(outputs, numKernels, inputDimention);
         for (int kernel = 0; kernel < kernels.size(); kernel++) {
             for (int mat = 0; mat < inputScaled.size(); mat++) {
                 // Calculate the size of the output matrix correctly accounting for the skipped edges
@@ -375,8 +380,10 @@ public:
 
                 // Apply ReLU activation
                 applyReLU(out);
+                
                 outputs[kernel] += out;
             }
+            
         }
     }
 
@@ -401,6 +408,8 @@ private:
     std::vector<Eigen::MatrixXd> gradientsScaledOut;
     std::vector<Eigen::MatrixXd> normalizedInput;
     std::vector<Eigen::MatrixXd> dnormalizedInputs;
+    int numKernels;
+    int inputDimention;
     Eigen::VectorXd gammaGrads;
     Eigen::VectorXd betaGrads;
     Eigen::VectorXd biases;

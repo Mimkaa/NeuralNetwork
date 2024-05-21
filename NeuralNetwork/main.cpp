@@ -12,6 +12,8 @@
 #include <string>
 #include <random>
 #include <numeric>
+#include <thread>
+#include <chrono>
 
 
 #include <Eigen/Dense>
@@ -46,24 +48,51 @@ void drawTraining(FILE* gnuplotPipe, std::vector<std::pair<double, double>>& dat
 
 }
 
+int countTrueValues(const std::vector<bool>& guessRate) {
+    return std::count(guessRate.begin(), guessRate.end(), true);
+}
 
 
 void train(int numberImages, Network& fullyConnectedPart, ConvPartVerTwo& convPart, ImageLoader& il, FILE* gnuplotPipe)
 {
     std::vector<std::pair<double, double>> cost;
+    std::vector<bool> guessRate;
     for (int i = 0; i < numberImages; i++)
     {
         auto datapoints = il.makeNumberCheckerByIndex(i, convPart);
-        fullyConnectedPart.TrainEfficient(datapoints, 0.001);
+        fullyConnectedPart.TrainEfficient(datapoints, 0.01);
         auto gradients = fullyConnectedPart.returnGradientsInputLayer();
         fullyConnectedPart.ClearGrads();
 
 
         convPart.acceptGradients(gradients);
-        convPart.backwardPass(0.001);
+        convPart.backwardPass(0.01);
         cost.emplace_back(i, fullyConnectedPart.Cost(datapoints[0]));
 
         drawTraining(gnuplotPipe, cost);
+        
+        convPart.forwardPass((il.getByIndexImage(i)));
+        auto ress = fullyConnectedPart.Classify(convPart.getFlat().data(), 10);
+        auto maxIt = std::max_element(ress.begin(), ress.end());
+        int maxIndex = std::distance(ress.begin(), maxIt);
+
+        auto correct = il.getByindexNumber(i);
+        auto maxIt1 = std::max_element(correct.begin(), correct.end());
+        int maxIndex1 = std::distance(correct.begin(), maxIt1);
+
+        //std::cout << "predicted: "<< maxIndex << std::endl;
+        //std::cout << "correct: " << maxIndex1 << std::endl;
+
+        if (maxIndex == maxIndex1) {
+            //std::this_thread::sleep_for(std::chrono::seconds(2));
+            guessRate.push_back(true);
+        }
+        else
+        {
+            guessRate.push_back(false);
+        }
+        std::cout << "guess Rate: " << float(countTrueValues(guessRate))/float(guessRate.size()) << std::endl;
+
     }
 
 }
@@ -141,11 +170,11 @@ int main()
 {
     
 
-    int numberImages = 500;
+    int numberImages = 30000;
     ImageLoader il = ImageLoader("D:/C++/NeuralNetwork/MNIST Dataset JPG format/MNIST Dataset JPG format/MNIST-Shuffled", std::to_string(numberImages));
 
     ConvPartVerTwo convPart = ConvPartVerTwo({ 4, 8 }, 28);
-    Network fullyConnectedPart = Network({ convPart.getSizeFlattendOutput(),64,32,10});
+    Network fullyConnectedPart = Network({ convPart.getSizeFlattendOutput(),128,64,10});
 
     FILE* gnuplotPipe = popen("D:\\gnuplot\\gnuplot\\bin\\gnuplot.exe -persistent", "w");
 
@@ -163,7 +192,13 @@ int main()
     train(numberImages, fullyConnectedPart, convPart, il, gnuplotPipe);
 
     //auto ans = guessFullyConnected(0, fullyConnectedPart, il);
-    auto ans = guess(90, fullyConnectedPart, convPart, il);
+    auto ans = guess(0, fullyConnectedPart, convPart, il);
+    auto ans2 = guess(80, fullyConnectedPart, convPart, il);
+    auto ans3 = guess(100, fullyConnectedPart, convPart, il);
+    auto ans4 = guess(801, fullyConnectedPart, convPart, il);
+    auto ans5 = guess(10, fullyConnectedPart, convPart, il);
+    auto ans6 = guess(12, fullyConnectedPart, convPart, il);
+    auto ans7 = guess(40, fullyConnectedPart, convPart, il);
 
     //storeState(fullyConnectedPart, convPart);
 

@@ -155,35 +155,35 @@ public:
 	}
 	//-------------------------------------------------
 
-	void clipGradients(double* values, size_t size, double clipValue) {
-		for (size_t i = 0; i < size; i++) {
-			if (values[i] > clipValue) {
-				values[i] = clipValue;
-			}
-			else if (values[i] < -clipValue) {
-				values[i] = -clipValue;
-			}
-		}
-	}
+	//void clipGradients(double* values, size_t size, double clipValue) {
+	//	for (size_t i = 0; i < size; i++) {
+	//		if (values[i] > clipValue) {
+	//			values[i] = clipValue;
+	//		}
+	//		else if (values[i] < -clipValue) {
+	//			values[i] = -clipValue;
+	//		}
+	//	}
+	//}
 
-	void normalizeByMaxValue(double* values, size_t size) {
-		if (size == 0) return;  // Handle empty array
+	//void normalizeByMaxValue(double* values, size_t size) {
+	//	if (size == 0) return;  // Handle empty array
 
-		// Find the maximum absolute value
-		double maxAbsVal = 0.0;
-		for (size_t i = 0; i < size; i++) {
-			if (std::abs(values[i]) > maxAbsVal) {
-				maxAbsVal = std::abs(values[i]);
-			}
-		}
+	//	// Find the maximum absolute value
+	//	double maxAbsVal = 0.0;
+	//	for (size_t i = 0; i < size; i++) {
+	//		if (std::abs(values[i]) > maxAbsVal) {
+	//			maxAbsVal = std::abs(values[i]);
+	//		}
+	//	}
 
-		// Normalize the array by the maximum absolute value
-		if (maxAbsVal != 0) {  // Prevent division by zero
-			for (size_t i = 0; i < size; i++) {
-				values[i] /= maxAbsVal;
-			}
-		}
-	}
+	//	// Normalize the array by the maximum absolute value
+	//	if (maxAbsVal != 0) {  // Prevent division by zero
+	//		for (size_t i = 0; i < size; i++) {
+	//			values[i] /= maxAbsVal;
+	//		}
+	//	}
+	//}
 
 	void UpdateAllGradients(NumberCheckerStructure& dataPoint)
 	{
@@ -204,7 +204,7 @@ public:
 
 		// Apply gradient clipping to chainValues
 		//clipGradients(chainValues, Lastlayer.GetNumOutputs(), 0.5); // Example clip value is 5.0
-		normalizeByMaxValue(chainValues, Lastlayer.GetNumOutputs());
+		//normalizeByMaxValue(chainValues, Lastlayer.GetNumOutputs());
 
 		Lastlayer.UpdateGradient(chainValues);
 
@@ -216,7 +216,7 @@ public:
 
 			// Clip currentChainValues before updating gradients
 			//clipGradients(currentChainValues, NNlayers[i].GetNumOutputs(),0.5); // Use the same clip value
-			normalizeByMaxValue(currentChainValues, NNlayers[i].GetNumOutputs());
+			//normalizeByMaxValue(currentChainValues, NNlayers[i].GetNumOutputs());
 
 			NNlayers[i].UpdateGradient(currentChainValues);
 
@@ -270,7 +270,7 @@ public:
 			gradInp[i] = gradOut * lastLayer.DerivativeActivationFunction(lastLayer.GetWeightedInputs()[i]);
 		}
 		//clipGradients(gradInp.data(), lastLayer.GetNumInputs(), 0.5);
-		normalizeByMaxValue(gradInp.data(), lastLayer.GetNumInputs());
+		//normalizeByMaxValue(gradInp.data(), lastLayer.GetNumInputs());
 		return gradInp;
 	}
 
