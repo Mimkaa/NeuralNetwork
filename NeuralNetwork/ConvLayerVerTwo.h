@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include "WeightsBiasesReturnStructure.h"
 
 class ConvLayerVerTwo
 {
@@ -133,10 +134,28 @@ private:
 
 
 public:
+
+    void InitAll()
+    {
+        initKernels(numKernels, kernelSize, inputSize);
+        InitZeros(inputScaled, inputSize, inputDimention + 2);
+        InitZeros(input, inputSize, inputDimention);
+        InitZeros(weightedInput, numKernels, inputDimention);
+        InitZeros(normalizedInput, numKernels, inputDimention);
+        InitZeros(dnormalizedInputs, numKernels, inputDimention);
+        InitZeros(outputs, numKernels, inputDimention);
+        InitZeros(gradientsIn, numKernels, inputDimention);
+        InitZeros(gradientsScaledIn, numKernels, inputDimention + 2);
+        InitZeros(gradientsOut, inputSize, inputDimention);
+        InitZeros(gradientsScaledOut, inputSize, inputDimention + 2);
+    }
+
 	ConvLayerVerTwo(int inputSize, int inputDimention, int numKernels, int kernelSize = 3)
         :
         numKernels(numKernels),
-        inputDimention(inputDimention)
+        inputDimention(inputDimention),
+        kernelSize(kernelSize),
+        inputSize(inputSize)
 	{
         initKernels(numKernels, kernelSize, inputSize);
         InitZeros(inputScaled, inputSize, inputDimention + 2);
@@ -295,29 +314,29 @@ public:
 
     }
 
-    void updateWeightsAndBiases(double learningRate) {
-        std::vector<Eigen::MatrixXd> gradientsWRTWeights(kernels.size());
-        Eigen::VectorXd gradientsWRTBiases = Eigen::VectorXd::Zero(biases.size());
+    void updateWeightsAndBiases(double learningRate, WeightsBiasesReturnStructure updates) {
+        //std::vector<Eigen::MatrixXd> gradientsWRTWeights(kernels.size());
+        //Eigen::VectorXd gradientsWRTBiases = Eigen::VectorXd::Zero(biases.size());
 
-        for (size_t i = 0; i < kernels.size(); ++i) {
-            gradientsWRTWeights[i] = Eigen::MatrixXd::Zero(kernels[i].rows(), kernels[i].cols());
+        //for (size_t i = 0; i < kernels.size(); ++i) {
+        //    gradientsWRTWeights[i] = Eigen::MatrixXd::Zero(kernels[i].rows(), kernels[i].cols());
 
-            for (size_t j = 0; j < inputScaled.size(); ++j) {
+        //    for (size_t j = 0; j < inputScaled.size(); ++j) {
 
-                gradientsWRTWeights[i] += correlateBackwards(input[j], gradientsIn[j], kernels[i]);
-            }
-            
-            //clipMatrix(gradientsWRTWeights[i], 0.5);
-            //normalizeMatrixByMaxValue(gradientsWRTWeights[i]);
-            //clipMatrix(gradientsWRTWeights[i], 5.0);
-            gradientsWRTBiases(i) = gradientsIn[i].sum();
-            
-        }
+        //        gradientsWRTWeights[i] += correlateBackwards(input[j], gradientsIn[j], kernels[i]);
+        //    }
+        //    
+        //    //clipMatrix(gradientsWRTWeights[i], 0.5);
+        //    //normalizeMatrixByMaxValue(gradientsWRTWeights[i]);
+        //    //clipMatrix(gradientsWRTWeights[i], 5.0);
+        //    gradientsWRTBiases(i) = gradientsIn[i].sum();
+        //    
+        //}
        
         // Update weights and biases using computed gradients
         for (size_t i = 0; i < kernels.size(); ++i) {
-            kernels[i] -= learningRate * gradientsWRTWeights[i]; // Update each filter
-            biases(i) -= learningRate * gradientsWRTBiases(i);   // Update biases
+            kernels[i] -= learningRate * updates.gradientsWRTWeights[i]; // Update each filter
+            biases(i) -= learningRate * updates.gradientsWRTBiases[i];   // Update biases
         }
 
         checkKernelsForNaNs(kernels, gradientsScaledIn);
@@ -355,6 +374,8 @@ public:
     
     void crossCorr() {
         InitZeros(outputs, numKernels, inputDimention);
+        InitZeros(weightedInput, numKernels, inputDimention);
+
         for (int kernel = 0; kernel < kernels.size(); kernel++) {
             for (int mat = 0; mat < inputScaled.size(); mat++) {
                 // Calculate the size of the output matrix correctly accounting for the skipped edges
@@ -374,9 +395,9 @@ public:
                 }
 
                 // Add the bias and store the result
-                weightedInput[kernel] = out;
+               
                 out.array() += biases[kernel];
-                
+                weightedInput[kernel] = out;
 
                 // Apply ReLU activation
                 applyReLU(out);
@@ -410,6 +431,8 @@ private:
     std::vector<Eigen::MatrixXd> dnormalizedInputs;
     int numKernels;
     int inputDimention;
+    int kernelSize;
+    int inputSize;
     Eigen::VectorXd gammaGrads;
     Eigen::VectorXd betaGrads;
     Eigen::VectorXd biases;

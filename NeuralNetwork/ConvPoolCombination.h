@@ -47,7 +47,7 @@ public:
 		poolLayer->acceptGradientsMats(gradients);
 		poolLayer->ExpandAndRouteGradients();
 		convLayer->acceptReditectedGradients(poolLayer->getRedirectedGradients());
-		convLayer->updateWeightsAndBiases(learningRate);
+		convLayer->updateWeightsAndBiases(learningRate, poolLayer->CalculateWeightsBiasesGrads());
 		convLayer->makeGradientsWrtInput();
 		
 		return convLayer->getGradients();

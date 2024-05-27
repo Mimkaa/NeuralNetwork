@@ -1,6 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 #include <iostream>
+#include "WeightsBiasesReturnStructure.h"
 
 class PoolLayerVerTwo
 {
@@ -45,6 +46,30 @@ private:
         return output;
     }
 
+    Eigen::MatrixXd correlateBackwards(const Eigen::MatrixXd& input, const Eigen::MatrixXd& gradient, const Eigen::MatrixXd& kernel) {
+        int kernelRows = kernel.rows();
+        int kernelCols = kernel.cols();
+        int gradientRows = gradient.rows();
+        int gradientCols = gradient.cols();
+
+        // Compute the gradient with respect to the filter
+        Eigen::MatrixXd gradWRTKernel = Eigen::MatrixXd::Zero(kernelRows, kernelCols);
+
+        // Perform the correlation operation using blocks
+        for (int i = 0; i <= gradientRows - kernelRows; ++i) {
+            for (int j = 0; j <= gradientCols - kernelCols; ++j) {
+                // Extract the corresponding submatrix from the input
+                Eigen::MatrixXd inputBlock = input.block(i, j, kernelRows, kernelCols);
+
+                // Element-wise multiplication with the gradient block and summing the result
+                gradWRTKernel += inputBlock.cwiseProduct(gradient.block(i, j, kernelRows, kernelCols));
+            }
+        }
+
+        return gradWRTKernel;
+    }
+    
+
     
 
 public:
@@ -56,12 +81,46 @@ public:
 		int outputDimention = inputDimention / 2;
 		InitZeros(outputs, inputSize, outputDimention);
 		InitZeros(backUps, inputSize, inputDimention);
+        InitZeros(inputs, inputSize, inputDimention);
         InitZeros(gradients, inputSize, outputDimention);
         outpuDim = outputDimention;
 	}
 
+    WeightsBiasesReturnStructure CalculateWeightsBiasesGrads() {
+        std::vector<Eigen::MatrixXd> gradientsWRTWeights(inputs.size());
+        Eigen::VectorXd gradientsWRTBiases = Eigen::VectorXd::Zero(inputs.size());
+
+        for (size_t i = 0; i < outputs.size(); ++i) {
+            gradientsWRTWeights[i] = Eigen::MatrixXd::Zero(3, 3);
+
+            for (size_t j = 0; j < inputs.size(); ++j) {
+                Eigen::Matrix3d kernel;
+
+                // Initialize all elements to zero
+                kernel.setZero();
+
+                gradientsWRTWeights[i] += correlateBackwards(inputs[j], redirectedGradients[i], kernel);
+            }
+            gradientsWRTBiases(i) = redirectedGradients[i].sum();
+
+        }
+        WeightsBiasesReturnStructure returnStr(inputs.size());
+        for (size_t i = 0; i < inputs.size(); ++i) {
+            returnStr.gradientsWRTWeights[i] = gradientsWRTWeights[i]; // Example size, replace with actual dimensions
+        }
+        returnStr.gradientsWRTBiases = gradientsWRTBiases;
+
+        return returnStr;
+    }
+
     void pool(const std::vector<Eigen::MatrixXd>& inputs)
     {
+        // copy input
+        for (int i = 0; i < inputs.size(); i++)
+        {
+            this->inputs[i] = inputs[i];
+        }
+
         InitZeros(backUps, inputSize, inputDimention);
         for (int i = 0; i < outputs.size(); i++)
         {
@@ -157,6 +216,7 @@ protected:
     std::vector<Eigen::MatrixXd> gradients;
     std::vector<Eigen::MatrixXd> redirectedGradients;
 	std::vector<Eigen::MatrixXd> backUps;
+    std::vector<Eigen::MatrixXd> inputs;
     int outpuDim;
     int inputSize;
     int inputDimention;

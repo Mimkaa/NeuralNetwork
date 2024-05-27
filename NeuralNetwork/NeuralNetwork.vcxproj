@@ -178,6 +178,7 @@ boost_filesystem-vc143-mt-x64-1_85.lib;python311.lib;opencv_world490d.lib;sfml-g
     <ClInclude Include="PoolingLayer.h" />
     <ClInclude Include="PoolLayerVerTwo.h" />
     <ClInclude Include="Shuffler.h" />
+    <ClInclude Include="WeightsBiasesReturnStructure.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

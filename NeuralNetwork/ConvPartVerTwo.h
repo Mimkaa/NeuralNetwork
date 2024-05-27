@@ -58,7 +58,7 @@ public:
 		}
 		auto conv = convPools[convPools.size() - 1].getConv();
 		conv.acceptReditectedGradients(lastPool->getRedirectedGradients());
-		conv.updateWeightsAndBiases(learningRate);
+		conv.updateWeightsAndBiases(learningRate, lastPool->CalculateWeightsBiasesGrads());
 		conv.makeGradientsWrtInput();
 		const std::vector<Eigen::MatrixXd>* temp = &conv.getGradients();
 		for (int i = convPools.size() - 2; i >= 0; --i) {
